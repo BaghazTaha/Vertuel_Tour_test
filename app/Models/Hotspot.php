@@ -12,6 +12,7 @@ class Hotspot extends Model
         'space_id',
         'employee_id',
         'target_scene_id',
+        'trainer_id',
         'type',
         'label',
         'pitch',
@@ -38,5 +39,10 @@ class Hotspot extends Model
     public function targetScene(): BelongsTo
     {
         return $this->belongsTo(Space::class, 'target_scene_id');
+    }
+
+    public function trainer(): BelongsTo
+    {
+        return $this->belongsTo(Trainer::class);
     }
 }

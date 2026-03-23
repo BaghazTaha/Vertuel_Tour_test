@@ -109,20 +109,18 @@
                                 <td class="px-6 py-4">
                                     @if($hotspot->type === 'employee')
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 text-brand-700">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                            </svg>
                                             Employee
+                                        </span>
+                                    @elseif($hotspot->type === 'trainer')
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700">
+                                            Trainer
+                                        </span>
+                                    @elseif($hotspot->type === 'schedule')
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700">
+                                            Schedule
                                         </span>
                                     @else
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"/>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M14.828 14.828a4 4 0 015.656 0l4-4a4 4 0 01-5.656-5.656l-1.1 1.1"/>
-                                            </svg>
                                             Scene link
                                         </span>
                                     @endif
@@ -130,7 +128,7 @@
                                 <td class="px-6 py-4">
                                     @if($hotspot->type === 'employee' && $hotspot->employee)
                                         <div class="flex items-center gap-2">
-                                            <div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-xs font-bold text-brand-600 shrink-0">
+                                            <div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center shrink-0 text-brand-600 font-bold text-xs">
                                                 {{ strtoupper(substr($hotspot->employee->first_name, 0, 1)) }}
                                             </div>
                                             <div>
@@ -138,19 +136,28 @@
                                                 <p class="text-xs text-slate-400">{{ $hotspot->employee->job_title }}</p>
                                             </div>
                                         </div>
+                                    @elseif($hotspot->type === 'trainer' && $hotspot->trainer)
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center shrink-0 text-purple-600 font-bold text-xs">
+                                                {{ strtoupper(substr($hotspot->trainer->first_name, 0, 1)) }}
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-slate-700">{{ $hotspot->trainer->first_name }} {{ $hotspot->trainer->last_name }}</p>
+                                                <p class="text-xs text-slate-400">Trainer</p>
+                                            </div>
+                                        </div>
                                     @elseif($hotspot->type === 'scene' && $hotspot->targetScene)
                                         <div class="flex items-center gap-2">
-                                            <div class="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                                                <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/>
-                                                </svg>
-                                            </div>
                                             <p class="font-medium text-slate-700">→ {{ $hotspot->targetScene->name }}</p>
+                                        </div>
+                                    @elseif($hotspot->type === 'schedule')
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-medium text-slate-700">Room Schedule</p>
                                         </div>
                                     @else
                                         <span class="text-slate-400 italic text-xs">—</span>
                                     @endif
+                                    
                                     @if($hotspot->label)
                                         <p class="text-xs text-slate-400 mt-0.5 ml-9">{{ $hotspot->label }}</p>
                                     @endif
@@ -163,7 +170,7 @@
                                     <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         {{-- Edit button --}}
                                         <button
-                                            onclick="openEditModal({{ $hotspot->id }}, '{{ $hotspot->type }}', {{ $hotspot->pitch }}, {{ $hotspot->yaw }}, '{{ addslashes($hotspot->label ?? '') }}', {{ $hotspot->employee_id ?? 'null' }}, {{ $hotspot->target_scene_id ?? 'null' }})"
+                                            onclick="openEditModal({{ $hotspot->id }}, '{{ $hotspot->type }}', {{ $hotspot->pitch }}, {{ $hotspot->yaw }}, '{{ addslashes($hotspot->label ?? '') }}', '{{ $hotspot->employee_id ?? '' }}', '{{ $hotspot->trainer_id ?? '' }}', '{{ $hotspot->target_scene_id ?? '' }}')"
                                             class="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -246,10 +253,6 @@
                                    onchange="switchType('employee')"/>
                             <div class="type-label flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all
                                         {{ old('type', 'employee') === 'employee' ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-500 hover:border-slate-300' }}">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
                                 Employee
                             </div>
                         </label>
@@ -259,11 +262,25 @@
                                    onchange="switchType('scene')"/>
                             <div class="type-label flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all
                                         {{ old('type') === 'scene' ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-slate-200 text-slate-500 hover:border-slate-300' }}">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"/>
-                                </svg>
                                 Scene link
+                            </div>
+                        </label>
+                        <label class="type-btn cursor-pointer">
+                            <input type="radio" name="type" value="trainer" class="sr-only"
+                                   {{ old('type') === 'trainer' ? 'checked' : '' }}
+                                   onchange="switchType('trainer')"/>
+                            <div class="type-label flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all
+                                        {{ old('type') === 'trainer' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-slate-200 text-slate-500 hover:border-slate-300' }}">
+                                Trainer
+                            </div>
+                        </label>
+                        <label class="type-btn cursor-pointer">
+                            <input type="radio" name="type" value="schedule" class="sr-only"
+                                   {{ old('type') === 'schedule' ? 'checked' : '' }}
+                                   onchange="switchType('schedule')"/>
+                            <div class="type-label flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all
+                                        {{ old('type') === 'schedule' ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-slate-200 text-slate-500 hover:border-slate-300' }}">
+                                Schedule
                             </div>
                         </label>
                     </div>
@@ -271,7 +288,7 @@
                 </div>
 
                 {{-- Employee select --}}
-                <div id="employee-field" class="{{ old('type') === 'scene' ? 'hidden' : '' }}">
+                <div id="employee-field" class="{{ old('type', 'employee') !== 'employee' ? 'hidden' : '' }}">
                     <label class="block text-sm font-medium text-slate-700 mb-1.5">Employee</label>
                     <select name="employee_id"
                             class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-colors @error('employee_id') border-red-400 @enderror">
@@ -283,6 +300,21 @@
                         @endforeach
                     </select>
                     @error('employee_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+                
+                {{-- Trainer select --}}
+                <div id="trainer-field" class="{{ old('type') !== 'trainer' ? 'hidden' : '' }}">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Trainer</label>
+                    <select name="trainer_id"
+                            class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-colors @error('trainer_id') border-red-400 @enderror">
+                        <option value="">— Select trainer —</option>
+                        @foreach($trainers as $trainer)
+                            <option value="{{ $trainer->id }}" {{ old('trainer_id') == $trainer->id ? 'selected' : '' }}>
+                                {{ $trainer->first_name }} {{ $trainer->last_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('trainer_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Scene select --}}
@@ -304,7 +336,7 @@
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1.5">Label <span class="text-slate-400 font-normal">(optional)</span></label>
                     <input type="text" name="label" value="{{ old('label') }}"
-                           placeholder="e.g. Go to meeting room..."
+                           placeholder="e.g. Schedule for Room"
                            class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-colors @error('label') border-red-400 @enderror"/>
                     @error('label') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
@@ -362,16 +394,29 @@
                         class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400">
                     <option value="employee">Employee</option>
                     <option value="scene">Scene link</option>
+                    <option value="trainer">Trainer</option>
+                    <option value="schedule">Schedule</option>
                 </select>
             </div>
 
-            <div id="edit-employee-field">
+            <div id="edit-employee-field" class="hidden">
                 <label class="block text-sm font-medium text-slate-700 mb-1.5">Employee</label>
                 <select name="employee_id" id="edit-employee-id"
                         class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400">
                     <option value="">— Select employee —</option>
                     @foreach($employees as $emp)
-                        <option value="{{ $emp->id }}">{{ $emp->full_name }} — {{ $emp->job_title }}</option>
+                        <option value="{{ $emp->id }}">{{ $emp->full_name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <div id="edit-trainer-field" class="hidden">
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Trainer</label>
+                <select name="trainer_id" id="edit-trainer-id"
+                        class="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400">
+                    <option value="">— Select trainer —</option>
+                    @foreach($trainers as $trainer)
+                        <option value="{{ $trainer->id }}">{{ $trainer->first_name }} {{ $trainer->last_name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -432,7 +477,7 @@ const viewer = pannellum.viewer('panorama', {
             pitch: {{ $hs->pitch }},
             yaw: {{ $hs->yaw }},
             type: 'info',
-            text: '{{ addslashes($hs->label ?? ($hs->type === "employee" && $hs->employee ? $hs->employee->full_name : ($hs->targetScene ? $hs->targetScene->name : ""))) }}',
+            text: '{{ addslashes($hs->label ?? ($hs->type === "employee" && $hs->employee ? $hs->employee->full_name : ($hs->type === "trainer" && $hs->trainer ? $hs->trainer->first_name." ".$hs->trainer->last_name : ($hs->targetScene ? $hs->targetScene->name : "")))) }}',
             cssClass: 'hs-{{ $hs->type }}'
         },
         @endforeach
@@ -466,15 +511,20 @@ document.getElementById('panorama').addEventListener('click', function(e) {
 
 // ─── Type switcher (add form) ─────────────────────────────────
 function switchType(type) {
-    const empField   = document.getElementById('employee-field');
-    const sceneField = document.getElementById('scene-field');
+    const empField     = document.getElementById('employee-field');
+    const sceneField   = document.getElementById('scene-field');
+    const trainerField = document.getElementById('trainer-field');
+
+    empField.classList.add('hidden');
+    sceneField.classList.add('hidden');
+    trainerField.classList.add('hidden');
 
     if (type === 'employee') {
         empField.classList.remove('hidden');
-        sceneField.classList.add('hidden');
-    } else {
-        empField.classList.add('hidden');
+    } else if (type === 'scene') {
         sceneField.classList.remove('hidden');
+    } else if (type === 'trainer') {
+        trainerField.classList.remove('hidden');
     }
 
     // Update radio button styling
@@ -482,6 +532,8 @@ function switchType(type) {
         el.className = el.className
             .replace('border-brand-500 bg-brand-50 text-brand-700','')
             .replace('border-amber-500 bg-amber-50 text-amber-700','')
+            .replace('border-purple-500 bg-purple-50 text-purple-700','')
+            .replace('border-sky-500 bg-sky-50 text-sky-700','')
             .trim();
         el.classList.add('border-slate-200','text-slate-500');
     });
@@ -490,12 +542,14 @@ function switchType(type) {
     if (active) {
         active.classList.remove('border-slate-200','text-slate-500');
         if (type === 'employee') active.classList.add('border-brand-500','bg-brand-50','text-brand-700');
-        else active.classList.add('border-amber-500','bg-amber-50','text-amber-700');
+        else if(type === 'scene') active.classList.add('border-amber-500','bg-amber-50','text-amber-700');
+        else if(type === 'trainer') active.classList.add('border-purple-500','bg-purple-50','text-purple-700');
+        else if(type === 'schedule') active.classList.add('border-sky-500','bg-sky-50','text-sky-700');
     }
 }
 
 // ─── Edit modal ───────────────────────────────────────────────
-function openEditModal(id, type, pitch, yaw, label, employeeId, targetSceneId) {
+function openEditModal(id, type, pitch, yaw, label, employeeId, trainerId, targetSceneId) {
     const form = document.getElementById('edit-form');
     form.action = `/admin/spaces/{{ $space->id }}/hotspots/${id}`;
 
@@ -505,6 +559,7 @@ function openEditModal(id, type, pitch, yaw, label, employeeId, targetSceneId) {
     document.getElementById('edit-type').value  = type;
 
     if (employeeId) document.getElementById('edit-employee-id').value   = employeeId;
+    if (trainerId) document.getElementById('edit-trainer-id').value   = trainerId;
     if (targetSceneId) document.getElementById('edit-target-scene-id').value = targetSceneId;
 
     switchEditType(type);
@@ -514,6 +569,7 @@ function openEditModal(id, type, pitch, yaw, label, employeeId, targetSceneId) {
 function switchEditType(type) {
     document.getElementById('edit-employee-field').classList.toggle('hidden', type !== 'employee');
     document.getElementById('edit-scene-field').classList.toggle('hidden', type !== 'scene');
+    document.getElementById('edit-trainer-field').classList.toggle('hidden', type !== 'trainer');
 }
 
 function closeEditModal(e) {
@@ -555,6 +611,28 @@ function closeEditModal(e) {
     height: 28px !important; 
     border: 4px solid #ffffff !important; 
     box-shadow: 0 0 20px rgba(245,158,11,0.8), 0 0 10px rgba(0,0,0,0.5) !important; 
+}
+
+/* Trainer Hotspot */
+.pnlm-hotspot.hs-trainer { 
+    background-color: #a855f7 !important; 
+    background-image: none !important;
+    border-radius: 100% !important; 
+    width: 28px !important; 
+    height: 28px !important; 
+    border: 4px solid #ffffff !important; 
+    box-shadow: 0 0 20px rgba(168,85,247,0.8), 0 0 10px rgba(0,0,0,0.5) !important; 
+}
+
+/* Schedule Hotspot */
+.pnlm-hotspot.hs-schedule { 
+    background-color: #0ea5e9 !important; 
+    background-image: none !important;
+    border-radius: 4px !important; 
+    width: 28px !important; 
+    height: 28px !important; 
+    border: 4px solid #ffffff !important; 
+    box-shadow: 0 0 20px rgba(14,165,233,0.8), 0 0 10px rgba(0,0,0,0.5) !important; 
 }
 </style>
 @endpush

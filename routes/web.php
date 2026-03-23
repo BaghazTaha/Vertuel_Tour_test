@@ -1,4 +1,3 @@
-// routes/web.php
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -45,11 +44,24 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('employees',   EmployeeController::class);
         Route::resource('spaces',      SpaceController::class);
 
+        Route::resource('groups',      \App\Http\Controllers\Admin\GroupController::class);
+        Route::resource('students',    \App\Http\Controllers\Admin\StudentController::class);
+        Route::resource('trainers',    \App\Http\Controllers\Admin\TrainerController::class);
+        Route::resource('schedules',   \App\Http\Controllers\Admin\ScheduleController::class);
+
         // Hotspot routes (nested under spaces)
         Route::get('/spaces/{space}/hotspots', [HotspotController::class, 'index'])->name('spaces.hotspots.index');
         Route::post('/spaces/{space}/hotspots', [HotspotController::class, 'store'])->name('spaces.hotspots.store');
         Route::put('/spaces/{space}/hotspots/{hotspot}', [HotspotController::class, 'update'])->name('spaces.hotspots.update');
         Route::delete('/spaces/{space}/hotspots/{hotspot}', [HotspotController::class, 'destroy'])->name('spaces.hotspots.destroy');
+    });
+
+// API routes for hotspots
+Route::middleware(['auth', 'role:employee|admin'])
+    ->prefix('api')
+    ->group(function () {
+        Route::get('/trainer/{trainer}', [\App\Http\Controllers\Api\HotspotDataController::class, 'getTrainerInfo']);
+        Route::get('/space/{space}/schedules', [\App\Http\Controllers\Api\HotspotDataController::class, 'getSpaceSchedules']);
     });
 
 // Tour routes

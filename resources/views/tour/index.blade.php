@@ -55,7 +55,6 @@
             z-index: 9999 !important;
             opacity: 1 !important;
             pointer-events: auto !important;
-            /* No transition here! This prevents the 'gliding' effect when panning. */
         }
 
         /* Our Custom Hotspot Internal Content */
@@ -88,6 +87,17 @@
             background-color: #f59e0b;
             border-radius: 8px;
             box-shadow: 0 0 30px rgba(245, 158, 11, 0.9), 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .custom-hs-wrapper.hs-trainer {
+            background-color: #a855f7;
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.9), 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .custom-hs-wrapper.hs-schedule {
+            background-color: #0ea5e9;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(14, 165, 233, 0.9), 0 0 10px rgba(0,0,0,0.5);
         }
 
         /* Hover Tooltip */
@@ -154,7 +164,7 @@
             <input type="text" 
                    id="employee-search" 
                    autocomplete="off"
-                   placeholder="Search for a colleague..." 
+                   placeholder="Search for a colleague or trainer..." 
                    oninput="handleSearch(this.value)"
                    class="w-full bg-transparent border-none focus:ring-0 text-sm font-medium text-white placeholder-slate-400 px-4 py-2">
             
@@ -205,6 +215,11 @@
                     My Profile
                 </a>
             @endif
+            @if(Auth::user()->hasRole('admin'))
+                <a href="{{ route('admin.dashboard') }}" class="block w-full text-center py-2.5 rounded-xl text-xs font-semibold glass hover:bg-amber-500/20 hover:text-amber-400 border border-amber-500/20 transition-all">
+                    Admin Dashboard
+                </a>
+            @endif
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="w-full py-2.5 rounded-xl text-xs font-semibold bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 transition-all">
@@ -238,13 +253,28 @@
         </button>
     </div>
 
-    {{-- Info Card (Shows when employee hotspot clicked) --}}
+    {{-- Info Card (Shows when employee or trainer hotspot clicked) --}}
     <div id="info-card" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] glass rounded-[32px] overflow-hidden shadow-[0_32px_128px_-16px_rgba(0,0,0,0.6)] z-[100] scale-0 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
         <button onclick="closeInfoCard()" class="absolute top-5 right-5 z-10 p-2 glass hover:bg-white/20 rounded-full transition-all">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
         <div class="p-8">
             <div id="info-content"></div>
+        </div>
+    </div>
+    
+    {{-- Schedule Card (Shows when schedule hotspot clicked) --}}
+    <div id="schedule-card" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] max-w-[90vw] glass rounded-[32px] overflow-hidden shadow-[0_32px_128px_-16px_rgba(0,0,0,0.6)] z-[100] scale-0 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
+        <button onclick="closeScheduleCard()" class="absolute top-5 right-5 z-10 p-2 glass hover:bg-white/20 rounded-full transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div class="p-8">
+            <h2 class="text-2xl font-bold tracking-tight text-white mb-6 uppercase flex items-center gap-3">
+                <svg class="w-7 h-7 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Room Schedule
+            </h2>
+            <div id="schedule-content" class="max-h-[50vh] overflow-y-auto custom-scrollbar pr-2 space-y-3">
+            </div>
         </div>
     </div>
 
@@ -257,13 +287,25 @@
             hotSpotDiv.classList.add('custom-tooltip-base');
             
             // Build the inner HTML directly to bypass library quirks
-            const styleClass = args.type === 'scene' ? 'hs-scene' : 'hs-employee';
-            
+            let styleClass = '';
             let photoHtml = '';
-            if (args.type === 'employee' && args.photo) {
-                photoHtml = `<img src="${args.photo}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'"/>`;
-            } else if (args.type === 'scene') {
+
+            if (args.type === 'scene') {
+                styleClass = 'hs-scene';
                 photoHtml = `<svg style="width:14px;height:14px;color:white;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101M14.828 14.828a4 4 0 015.656 0l4-4a4 4 0 01-5.656-5.656l-1.1 1.1"/></svg>`;
+            } else if (args.type === 'schedule') {
+                styleClass = 'hs-schedule';
+                photoHtml = `<svg style="width:14px;height:14px;color:white;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
+            } else if (args.type === 'employee') {
+                styleClass = 'hs-employee';
+                if (args.photo) {
+                    photoHtml = `<img src="${args.photo}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'"/>`;
+                }
+            } else if (args.type === 'trainer') {
+                styleClass = 'hs-trainer';
+                if (args.photo) {
+                    photoHtml = `<img src="${args.photo}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'"/>`;
+                }
             }
 
             hotSpotDiv.innerHTML = `
@@ -274,22 +316,18 @@
             `;
 
             // ─── Direct DOM Event Binding ───
-            // Guaranteed to fire, bypassing any Pannellum internal event propagation issues.
             if (args.type === 'employee' && args.employeeData) {
-                hotSpotDiv.addEventListener('click', function(e) {
-                    showEmployeeInfo(args.employeeData);
-                });
-                // Fallback for mobile touch issues
-                hotSpotDiv.addEventListener('touchstart', function(e) {
-                    showEmployeeInfo(args.employeeData);
-                }, {passive: true});
+                hotSpotDiv.addEventListener('click', function(e) { showEmployeeInfo(args.employeeData); });
+                hotSpotDiv.addEventListener('touchstart', function(e) { showEmployeeInfo(args.employeeData); }, {passive: true});
             } else if (args.type === 'scene' && args.targetSceneId) {
-                hotSpotDiv.addEventListener('click', function(e) {
-                    loadScene(args.targetSceneId);
-                });
-                hotSpotDiv.addEventListener('touchstart', function(e) {
-                    loadScene(args.targetSceneId);
-                }, {passive: true});
+                hotSpotDiv.addEventListener('click', function(e) { loadScene(args.targetSceneId); });
+                hotSpotDiv.addEventListener('touchstart', function(e) { loadScene(args.targetSceneId); }, {passive: true});
+            } else if (args.type === 'trainer' && args.trainerId) {
+                hotSpotDiv.addEventListener('click', function(e) { loadTrainerInfoAPI(args.trainerId); });
+                hotSpotDiv.addEventListener('touchstart', function(e) { loadTrainerInfoAPI(args.trainerId); }, {passive: true});
+            } else if (args.type === 'schedule' && args.spaceId) {
+                hotSpotDiv.addEventListener('click', function(e) { loadScheduleInfoAPI(args.spaceId); });
+                hotSpotDiv.addEventListener('touchstart', function(e) { loadScheduleInfoAPI(args.spaceId); }, {passive: true});
             }
         }
 
@@ -305,12 +343,12 @@
                     {
                         "pitch": {{ $hs->pitch }},
                         "yaw": {{ $hs->yaw }},
-                        "type": "info", // Force type info so we intercept rendering fully
+                        "type": "info",
                         "createTooltipFunc": renderCustomHotspot,
                         "createTooltipArgs": {
                             "type": "{{ $hs->type }}",
-                            "text": "{{ addslashes($hs->label ?? ($hs->employee ? $hs->employee->full_name : ($hs->targetScene ? $hs->targetScene->name : ''))) }}",
-                            "photo": "{{ $hs->employee && $hs->employee->photo_url ? $hs->employee->photo_url : '' }}"
+                            "text": "{{ addslashes($hs->label ?? ($hs->employee ? $hs->employee->full_name : ($hs->trainer ? $hs->trainer->first_name.' '.$hs->trainer->last_name : ($hs->targetScene ? $hs->targetScene->name : 'Room Schedule')))) }}",
+                            "photo": "{{ $hs->employee && $hs->employee->photo_url ? $hs->employee->photo_url : ($hs->type === 'trainer' && $hs->trainer && $hs->trainer->photo ? asset('storage/'.$hs->trainer->photo) : '') }}"
                             @if($hs->type === 'scene' && $hs->target_scene_id)
                             , "targetSceneId": "space_{{ $hs->target_scene_id }}"
                             @elseif($hs->type === 'employee' && $hs->employee)
@@ -324,6 +362,10 @@
                                 "qr": "{{ $hs->employee->qr_code_url }}",
                                 "photo": "{{ $hs->employee->photo_url ?: 'https://ui-avatars.com/api/?name='.urlencode($hs->employee->full_name).'&background=6366f1&color=fff' }}"
                             }
+                            @elseif($hs->type === 'trainer' && $hs->trainer_id)
+                            , "trainerId": "{{ $hs->trainer_id }}"
+                            @elseif($hs->type === 'schedule')
+                            , "spaceId": "{{ $hs->space_id }}"
                             @endif
                         }
                     },
@@ -345,13 +387,6 @@
                 "autoRotateInactivityDelay": 3000
             },
             "scenes": scenesData
-        });
-
-        // Debug: Log hotspots after load
-        console.log("Viewer Initialized. Scenes Data:", scenesData);
-        viewer.on('load', () => {
-            const currentScene = viewer.getScene();
-            console.log("Current Scene:", currentScene, "Hotspots:", scenesData[currentScene]?.hotSpots);
         });
 
         // Toggle Sidebar
@@ -412,71 +447,72 @@
 
         // Employee Info
         function showEmployeeInfo(data) {
+            renderInfoCard(data, 'brand');
+        }
+
+        function closeInfoCard() {
+            const card = document.getElementById('info-card');
+            card.classList.add('scale-0', 'opacity-0');
+            card.classList.remove('scale-100', 'opacity-100');
+        }
+        
+        function closeScheduleCard() {
+            const card = document.getElementById('schedule-card');
+            card.classList.add('scale-0', 'opacity-0');
+            card.classList.remove('scale-100', 'opacity-100');
+        }
+        
+        // ─── AJAX FETCH TRAINERS & SCHEDULES ──────────────────────
+
+        function renderInfoCard(data, theme = 'brand') {
             const card = document.getElementById('info-card');
             const content = document.getElementById('info-content');
             
+            let pulseColor = theme === 'brand' ? 'brand-500' : 'purple-500';
+            let textColor = theme === 'brand' ? 'brand-400' : 'purple-400';
+            
             content.innerHTML = `
                 <div class="flex flex-col items-center">
-                    {{-- Header with Photo and Name --}}
                     <div class="relative mb-6 text-center">
-                        <div class="absolute inset-x-0 -top-4 -bottom-4 bg-brand-500 blur-3xl opacity-10 animate-pulse"></div>
+                        <div class="absolute inset-x-0 -top-4 -bottom-4 bg-${pulseColor} blur-3xl opacity-10 animate-pulse"></div>
                         <img src="${data.photo}" class="w-32 h-32 rounded-[2.5rem] object-cover border-4 border-white/20 relative shadow-2xl mx-auto" alt="${data.name}"/>
                         <div class="relative mt-5">
                             <h2 class="text-2xl font-bold tracking-tight text-white mb-1 uppercase">${data.name}</h2>
-                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-500/30">
-                                <span class="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"></span>
-                                <span class="text-[10px] font-bold text-brand-400 uppercase tracking-widest">${data.role}</span>
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-${pulseColor}/20 border border-${pulseColor}/30">
+                                <span class="text-[10px] font-bold text-${textColor} uppercase tracking-widest">${data.role || data.specialty || 'Personnel'}</span>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Data Grid --}}
                     <div class="w-full grid grid-cols-2 gap-3 mb-6">
-                        <div class="p-3 rounded-2xl bg-white/5 border border-white/10 group hover:bg-white/10 transition-all">
-                            <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-1.5">Department</p>
+                        <div class="p-3 rounded-2xl bg-white/5 border border-white/10">
+                            <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-1.5">${data.dept ? 'Department' : ''}</p>
                             <div class="flex items-center gap-2">
-                                <svg class="w-3.5 h-3.5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                <span class="text-xs font-semibold text-slate-200">${data.dept || 'Corporate'}</span>
+                                <span class="text-xs font-semibold text-slate-200">${data.dept || ''}</span>
                             </div>
                         </div>
-                        <div class="p-3 rounded-2xl bg-white/5 border border-white/10 group hover:bg-white/10 transition-all">
+                        ${data.matricule ? `
+                        <div class="p-3 rounded-2xl bg-white/5 border border-white/10">
                             <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-1.5">Matricule</p>
                             <div class="flex items-center gap-2">
-                                <svg class="w-3.5 h-3.5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                 <span class="text-xs font-mono font-bold text-slate-200">${data.matricule}</span>
                             </div>
-                        </div>
-                        <a href="mailto:${data.email}" class="p-3 rounded-2xl bg-white/5 border border-white/10 group hover:bg-brand-500/10 hover:border-brand-500/30 transition-all text-left">
+                        </div>` : ''}
+                        
+                        <a href="mailto:${data.email}" class="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-left ${!data.matricule ? 'col-span-2' : ''}">
                             <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-1.5">Email</p>
                             <div class="flex items-center gap-2">
-                                <svg class="w-3.5 h-3.5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"/></svg>
-                                <span class="text-[11px] font-semibold text-slate-200 truncate">${data.email}</span>
+                                <span class="text-[11px] font-semibold text-slate-200 truncate">${data.email || '—'}</span>
                             </div>
                         </a>
-                        <a href="tel:${data.phone}" class="p-3 rounded-2xl bg-white/5 border border-white/10 group hover:bg-brand-500/10 hover:border-brand-500/30 transition-all text-left">
+                        ${data.phone ? `
+                        <a href="tel:${data.phone}" class="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-left col-span-2">
                             <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-1.5">Phone</p>
                             <div class="flex items-center gap-2">
-                                <svg class="w-3.5 h-3.5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1c-8.284 0-15-6.716-15-15V5z"/></svg>
-                                <span class="text-xs font-semibold text-slate-200">${data.phone || '—'}</span>
+                                <span class="text-xs font-semibold text-slate-200">${data.phone}</span>
                             </div>
-                        </a>
+                        </a>` : ''}
                     </div>
-
-                    {{-- QR Code Section --}}
-                    ${data.qr ? `
-                    <div class="w-full p-6 rounded-[2rem] bg-indigo-50/5 border border-white/5 flex flex-col items-center gap-4 group">
-                        <div class="relative p-3 bg-white rounded-2xl">
-                            <img src="${data.qr}" class="w-24 h-24" alt="QR Code"/>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-3">Scan to View Public Profile</p>
-                            <a href="${data.qr}" download="qr_${data.matricule}.png" class="inline-flex items-center gap-2 text-[10px] font-bold text-brand-400 hover:text-white transition-colors">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                DOWNLOAD QR CODE
-                            </a>
-                        </div>
-                    </div>
-                    ` : ''}
                 </div>
             `;
             
@@ -484,10 +520,91 @@
             card.classList.add('scale-100', 'opacity-100');
         }
 
-        function closeInfoCard() {
+        function loadTrainerInfoAPI(trainerId) {
+            const content = document.getElementById('info-content');
+            content.innerHTML = `<div class="text-center py-10"><svg class="animate-spin h-8 w-8 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="mt-4 text-xs font-medium text-slate-400">Loading trainer profile...</p></div>`;
+            
             const card = document.getElementById('info-card');
-            card.classList.add('scale-0', 'opacity-0');
-            card.classList.remove('scale-100', 'opacity-100');
+            card.classList.remove('scale-0', 'opacity-0');
+            card.classList.add('scale-100', 'opacity-100');
+
+            fetch(`/api/trainer/${trainerId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(async res => {
+                    if (!res.ok) {
+                        throw new Error(await res.text() || 'Network error');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    renderInfoCard(data, 'purple');
+                })
+                .catch(err => {
+                    console.error(err);
+                    content.innerHTML = `<p class="text-red-400 text-center text-sm py-10">Failed to load trainer info.</p>`;
+                });
+        }
+
+        function loadScheduleInfoAPI(spaceId) {
+            const content = document.getElementById('schedule-content');
+            content.innerHTML = `<div class="text-center py-10"><svg class="animate-spin h-8 w-8 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
+            
+            const card = document.getElementById('schedule-card');
+            card.classList.remove('scale-0', 'opacity-0');
+            card.classList.add('scale-100', 'opacity-100');
+
+            fetch(`/api/space/${spaceId}/schedules`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(async res => {
+                    if (!res.ok) {
+                        throw new Error(await res.text() || 'Network error');
+                    }
+                    return res.json();
+                })
+                .then(schedules => {
+                    if (!schedules || !schedules.length) {
+                        content.innerHTML = `<div class="text-center py-8"><p class="text-slate-400 text-sm">Aucun cours planifié dans cette salle.</p></div>`;
+                        return;
+                    }
+                    
+                    let html = '';
+                    schedules.forEach(s => {
+                        let st = s.start_time ? s.start_time.substring(0, 5) : '--:--';
+                        let et = s.end_time ? s.end_time.substring(0, 5) : '--:--';
+                        let trainerName = s.trainer ? (s.trainer.first_name + ' ' + s.trainer.last_name) : 'Formateur inconnu';
+                        let groupName = s.group ? s.group.name : 'Groupe inconnu';
+                        
+                        html += `
+                        <div class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                            <div class="flex flex-col min-w-[70px]">
+                                <span class="text-xs font-bold text-sky-400 uppercase tracking-widest mb-1">${s.day_of_week || '-'}</span>
+                                <span class="text-lg font-bold text-white">${st} - ${et}</span>
+                            </div>
+                            <div class="flex-1 px-4 sm:px-6 overflow-hidden">
+                                <p class="text-base font-semibold text-white truncate" title="${s.subject || ''}">${s.subject || 'Matière inconnue'}</p>
+                                <p class="text-xs text-slate-400 mt-1 truncate">Formateur: <span class="text-slate-200">${trainerName}</span></p>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-white/10 border border-white/20 text-white shadow-sm uppercase">
+                                    ${groupName}
+                                </span>
+                            </div>
+                        </div>`;
+                    });
+                    content.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error("Schedule Fetch Error API: ", err);
+                    content.innerHTML = `<p class="text-red-400 text-center text-sm py-10">An error occurred while loading schedule data.<br><span class="text-xs text-white/50">` + err.message.substring(0,60) + `</span></p>`;
+                });
         }
 
         // Initialize active button
@@ -508,13 +625,8 @@
                 scene.hotSpots.forEach(hs => {
                     if (hs.createTooltipArgs && hs.createTooltipArgs.employeeData && hs.createTooltipArgs.employeeData.name.toLowerCase().includes(query.toLowerCase())) {
                         results.push({
-                            sceneId,
-                            sceneTitle: scene.title,
-                            p: hs.pitch,
-                            y: hs.yaw,
-                            name: hs.createTooltipArgs.employeeData.name,
-                            role: hs.createTooltipArgs.employeeData.role,
-                            hs: hs
+                            sceneId, sceneTitle: scene.title, p: hs.pitch, y: hs.yaw,
+                            name: hs.createTooltipArgs.employeeData.name, role: hs.createTooltipArgs.employeeData.role
                         });
                     }
                 });
@@ -540,38 +652,21 @@
         }
 
         function panToHotspot(sceneId, pitch, yaw, index) {
-            // Hide results
             document.getElementById('search-results').classList.add('hidden');
             document.getElementById('employee-search').value = '';
 
             const performPan = () => {
                 viewer.lookAt(pitch, yaw, viewer.getHfov(), 2000);
-                
-                // Highlight the hotspot visually by searching in DOM after a bit
-                setTimeout(() => {
-                    // This is a bit hacky as Pannellum doesn't give us the ID, 
-                    // but we can find the one closest to the target pitch/yaw if needed.
-                    // Or just highlight all ones that match the type to be sure.
-                    const hsElements = document.querySelectorAll('.pnlm-hotspot.hs-employee');
-                    hsElements.forEach(el => {
-                        // Small heuristic to find the right one
-                        el.classList.add('hs-highlight');
-                        setTimeout(() => el.classList.remove('hs-highlight'), 5000);
-                    });
-                }, 1000);
             };
 
-            // Switch scene if needed
             if (viewer.getScene() !== sceneId) {
                 viewer.loadScene(sceneId, pitch, yaw, viewer.getHfov());
-                // After scene change, lookAt is often reset or handled by loadScene parameters
                 setTimeout(performPan, 1200);
             } else {
                 performPan();
             }
         }
 
-        // Close search on click outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#employee-search') && !e.target.closest('#search-results')) {
                 document.getElementById('search-results').classList.add('hidden');

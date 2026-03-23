@@ -11,7 +11,7 @@ class TourController extends Controller
 {
     public function index(): View
     {
-        $spaces = Space::with(['hotspots.targetScene', 'hotspots.employee.department'])->get();
+        $spaces = Space::with(['hotspots.targetScene', 'hotspots.employee.department', 'hotspots.trainer'])->get();
         if ($spaces->isEmpty()) {
             return view('tour.index', ['spaces' => $spaces, 'firstSpace' => null]);
         }

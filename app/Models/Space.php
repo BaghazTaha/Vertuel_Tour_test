@@ -15,6 +15,8 @@ class Space extends Model
         'description',
         'photo_360_path',
         'thumbnail_path',
+        'capacity',
+        'type',
     ];
 
     /* ---------- Relationships ---------- */
@@ -27,6 +29,11 @@ class Space extends Model
     public function hotspots(): HasMany
     {
         return $this->hasMany(Hotspot::class);
+    }
+
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class);
     }
 
     /* ---------- Accessors ---------- */
