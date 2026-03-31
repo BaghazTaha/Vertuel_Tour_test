@@ -156,8 +156,8 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 font-mono text-xs text-slate-500">
-                                    <span class="bg-slate-100 px-2 py-0.5 rounded">p: {{ number_format($hotspot->pitch, 2) }}</span>
-                                    <span class="bg-slate-100 px-2 py-0.5 rounded ml-1">y: {{ number_format($hotspot->yaw, 2) }}</span>
+                                    <span class="bg-slate-100 px-2 py-0.5 rounded">p: {{ number_format($hotspot->pitch, 4) }}</span>
+                                    <span class="bg-slate-100 px-2 py-0.5 rounded ml-1">y: {{ number_format($hotspot->yaw, 4) }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -219,14 +219,14 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="text-xs text-slate-500 font-medium block mb-1">Pitch</label>
-                            <input type="number" name="pitch" id="pitch-input" step="0.01"
+                            <input type="number" name="pitch" id="pitch-input" step="any"
                                    value="{{ old('pitch') }}" required
                                    placeholder="Click viewer"
                                    class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-colors @error('pitch') border-red-400 @enderror"/>
                         </div>
                         <div>
                             <label class="text-xs text-slate-500 font-medium block mb-1">Yaw</label>
-                            <input type="number" name="yaw" id="yaw-input" step="0.01"
+                            <input type="number" name="yaw" id="yaw-input" step="any"
                                    value="{{ old('yaw') }}" required
                                    placeholder="Click viewer"
                                    class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-colors @error('yaw') border-red-400 @enderror"/>
@@ -346,12 +346,12 @@
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="text-xs text-slate-500 font-medium block mb-1">Pitch</label>
-                    <input type="number" name="pitch" id="edit-pitch" step="0.01" required
+                    <input type="number" name="pitch" id="edit-pitch" step="any" required
                            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"/>
                 </div>
                 <div>
                     <label class="text-xs text-slate-500 font-medium block mb-1">Yaw</label>
-                    <input type="number" name="yaw" id="edit-yaw" step="0.01" required
+                    <input type="number" name="yaw" id="edit-yaw" step="any" required
                            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"/>
                 </div>
             </div>
@@ -524,7 +524,37 @@ function closeEditModal(e) {
 </script>
 
 <style>
-.pnlm-hotspot.hs-employee { background: #6366f1; border-radius: 50%; width: 20px; height: 20px; border: 3px solid white; box-shadow: 0 2px 8px rgba(99,102,241,0.5); }
-.pnlm-hotspot.hs-scene    { background: #f59e0b; border-radius: 4px;  width: 20px; height: 20px; border: 3px solid white; box-shadow: 0 2px 8px rgba(245,158,11,0.5); }
+/* ═══════════════════════════════════
+     GLOBAL BULLETPROOF HOTSPOT CSS
+═══════════════════════════════════ */
+.pnlm-hotspot {
+    cursor: pointer !important;
+    display: block !important;
+    visibility: visible !important;
+    z-index: 999 !important;
+    opacity: 1 !important;
+}
+
+/* Employee Hotspot */
+.pnlm-hotspot.hs-employee { 
+    background-color: #6366f1 !important; 
+    background-image: none !important;
+    border-radius: 100% !important; 
+    width: 28px !important; 
+    height: 28px !important; 
+    border: 4px solid #ffffff !important; 
+    box-shadow: 0 0 20px rgba(99,102,241,0.8), 0 0 10px rgba(0,0,0,0.5) !important; 
+}
+
+/* Scene link Hotspot */
+.pnlm-hotspot.hs-scene { 
+    background-color: #f59e0b !important; 
+    background-image: none !important;
+    border-radius: 10px !important; 
+    width: 28px !important; 
+    height: 28px !important; 
+    border: 4px solid #ffffff !important; 
+    box-shadow: 0 0 20px rgba(245,158,11,0.8), 0 0 10px rgba(0,0,0,0.5) !important; 
+}
 </style>
 @endpush

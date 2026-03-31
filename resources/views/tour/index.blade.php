@@ -45,34 +45,78 @@
         .pnlm-container { background: transparent !important; }
         .pnlm-load-box { background: rgba(15, 23, 42, 0.8) !important; border-radius: 20px !important; backdrop-filter: blur(10px); }
         
-        /* Custom Hotspots */
-        .pnlm-hotspot.hs-employee {
-            background-color: #6366f1;
-            border: 3px solid white;
+        /* ═══════════════════════════════════
+             GLOBAL BULLETPROOF HOTSPOT CSS
+        ═══════════════════════════════════ */
+        .pnlm-hotspot {
+            cursor: pointer !important;
+            display: block !important;
+            visibility: visible !important;
+            z-index: 9999 !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            /* No transition here! This prevents the 'gliding' effect when panning. */
+        }
+
+        /* Our Custom Hotspot Internal Content */
+        .custom-hs-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #ffffff;
             border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
-            width: 24px;
-            height: 24px;
-            transition: transform 0.2s;
+            box-shadow: 0 0 25px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.3);
+            width: 32px;
+            height: 32px;
+            overflow: hidden;
+            pointer-events: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .pnlm-hotspot.hs-employee:hover { transform: scale(1.2); }
-        
-        .pnlm-hotspot.hs-scene {
+
+        .pnlm-hotspot:hover .custom-hs-wrapper {
+            transform: scale(1.3) translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .custom-hs-wrapper.hs-employee {
+            background-color: #6366f1;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.9), 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .custom-hs-wrapper.hs-scene {
             background-color: #f59e0b;
-            border: 3px solid white;
             border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
-            width: 24px;
-            height: 24px;
-            transition: transform 0.2s;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.9), 0 0 10px rgba(0,0,0,0.5);
         }
-        .pnlm-hotspot.hs-scene:hover { transform: scale(1.2); }
+
+        /* Hover Tooltip */
+        .custom-hs-tooltip {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(8px);
+        }
+
+        .pnlm-hotspot:hover .custom-hs-tooltip {
+            opacity: 1;
+        }
 
         /* Glassmorphism */
         .glass {
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.7);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -208,6 +252,47 @@
          PANNELLUM DATA & LOGIC
     ═══════════════════════════════════════════ --}}
     <script>
+        // ─── Custom DOM Generator for Hotspots ──────────────────────
+        function renderCustomHotspot(hotSpotDiv, args) {
+            hotSpotDiv.classList.add('custom-tooltip-base');
+            
+            // Build the inner HTML directly to bypass library quirks
+            const styleClass = args.type === 'scene' ? 'hs-scene' : 'hs-employee';
+            
+            let photoHtml = '';
+            if (args.type === 'employee' && args.photo) {
+                photoHtml = `<img src="${args.photo}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'"/>`;
+            } else if (args.type === 'scene') {
+                photoHtml = `<svg style="width:14px;height:14px;color:white;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101M14.828 14.828a4 4 0 015.656 0l4-4a4 4 0 01-5.656-5.656l-1.1 1.1"/></svg>`;
+            }
+
+            hotSpotDiv.innerHTML = `
+                <div class="custom-hs-wrapper ${styleClass}">
+                    ${photoHtml}
+                </div>
+                <div class="custom-hs-tooltip">${args.text}</div>
+            `;
+
+            // ─── Direct DOM Event Binding ───
+            // Guaranteed to fire, bypassing any Pannellum internal event propagation issues.
+            if (args.type === 'employee' && args.employeeData) {
+                hotSpotDiv.addEventListener('click', function(e) {
+                    showEmployeeInfo(args.employeeData);
+                });
+                // Fallback for mobile touch issues
+                hotSpotDiv.addEventListener('touchstart', function(e) {
+                    showEmployeeInfo(args.employeeData);
+                }, {passive: true});
+            } else if (args.type === 'scene' && args.targetSceneId) {
+                hotSpotDiv.addEventListener('click', function(e) {
+                    loadScene(args.targetSceneId);
+                });
+                hotSpotDiv.addEventListener('touchstart', function(e) {
+                    loadScene(args.targetSceneId);
+                }, {passive: true});
+            }
+        }
+
         const scenesData = {
             @foreach($spaces as $space)
             "space_{{ $space->id }}": {
@@ -220,27 +305,27 @@
                     {
                         "pitch": {{ $hs->pitch }},
                         "yaw": {{ $hs->yaw }},
-                        "type": "{{ $hs->type === 'scene' ? 'scene' : 'info' }}",
-                        "text": "{{ $hs->label }}",
-                        @if($hs->type === 'scene' && $hs->target_scene_id)
-                        "sceneId": "space_{{ $hs->target_scene_id }}",
-                        "cssClass": "hs-scene",
-                        @elseif($hs->type === 'employee' && $hs->employee)
-                        "employeeName": "{{ strtolower($hs->employee->full_name) }}",
-                        "employeeDisplayName": "{{ $hs->employee->full_name }}",
-                        "employeeRole": "{{ $hs->employee->job_title }}",
-                        "cssClass": "hs-employee",
-                        "clickHandlerFunc": (e) => showEmployeeInfo({
-                            name: "{{ $hs->employee->full_name }}",
-                            matricule: "{{ $hs->employee->matricule }}",
-                            role: "{{ $hs->employee->job_title }}",
-                            dept: "{{ $hs->employee->department?->name }}",
-                            email: "{{ $hs->employee->email }}",
-                            phone: "{{ $hs->employee->phone }}",
-                            qr: "{{ $hs->employee->qr_code_url }}",
-                            photo: "{{ $hs->employee->photo_url ?: 'https://ui-avatars.com/api/?name='.urlencode($hs->employee->full_name).'&background=6366f1&color=fff' }}"
-                        }),
-                        @endif
+                        "type": "info", // Force type info so we intercept rendering fully
+                        "createTooltipFunc": renderCustomHotspot,
+                        "createTooltipArgs": {
+                            "type": "{{ $hs->type }}",
+                            "text": "{{ addslashes($hs->label ?? ($hs->employee ? $hs->employee->full_name : ($hs->targetScene ? $hs->targetScene->name : ''))) }}",
+                            "photo": "{{ $hs->employee && $hs->employee->photo_url ? $hs->employee->photo_url : '' }}"
+                            @if($hs->type === 'scene' && $hs->target_scene_id)
+                            , "targetSceneId": "space_{{ $hs->target_scene_id }}"
+                            @elseif($hs->type === 'employee' && $hs->employee)
+                            , "employeeData": {
+                                "name": "{{ addslashes($hs->employee->full_name) }}",
+                                "matricule": "{{ $hs->employee->matricule }}",
+                                "role": "{{ addslashes($hs->employee->job_title) }}",
+                                "dept": "{{ addslashes($hs->employee->department?->name) }}",
+                                "email": "{{ $hs->employee->email }}",
+                                "phone": "{{ $hs->employee->phone }}",
+                                "qr": "{{ $hs->employee->qr_code_url }}",
+                                "photo": "{{ $hs->employee->photo_url ?: 'https://ui-avatars.com/api/?name='.urlencode($hs->employee->full_name).'&background=6366f1&color=fff' }}"
+                            }
+                            @endif
+                        }
                     },
                     @endforeach
                 ]
@@ -260,6 +345,13 @@
                 "autoRotateInactivityDelay": 3000
             },
             "scenes": scenesData
+        });
+
+        // Debug: Log hotspots after load
+        console.log("Viewer Initialized. Scenes Data:", scenesData);
+        viewer.on('load', () => {
+            const currentScene = viewer.getScene();
+            console.log("Current Scene:", currentScene, "Hotspots:", scenesData[currentScene]?.hotSpots);
         });
 
         // Toggle Sidebar
@@ -414,14 +506,14 @@
             const results = [];
             Object.entries(scenesData).forEach(([sceneId, scene]) => {
                 scene.hotSpots.forEach(hs => {
-                    if (hs.type === 'info' && hs.employeeName && hs.employeeName.includes(query.toLowerCase())) {
+                    if (hs.createTooltipArgs && hs.createTooltipArgs.employeeData && hs.createTooltipArgs.employeeData.name.toLowerCase().includes(query.toLowerCase())) {
                         results.push({
                             sceneId,
                             sceneTitle: scene.title,
                             p: hs.pitch,
                             y: hs.yaw,
-                            name: hs.employeeDisplayName,
-                            role: hs.employeeRole,
+                            name: hs.createTooltipArgs.employeeData.name,
+                            role: hs.createTooltipArgs.employeeData.role,
                             hs: hs
                         });
                     }
