@@ -43,4 +43,63 @@ class HotspotDataController extends Controller
             
         return response()->json($schedules);
     }
+
+    public function mapData()
+    {
+        $spaces = Space::with('department')->get();
+        
+        // Group spaces by floor
+        $floors = $spaces->groupBy('floor')->map(function ($floorSpaces) {
+            return $floorSpaces->map(function ($space) {
+                return [
+                    'id' => $space->id,
+                    'name' => $space->name,
+                    'department' => $space->department ? $space->department->name : 'Public',
+                ];
+            })->values();
+        });
+
+        return response()->json($floors);
+    }
+
+    public function getLiveSchedule($spaceId)
+    {
+        $space = Space::find($spaceId);
+        if (!$space) {
+            return response()->json(['error' => 'Space not found'], 404);
+        }
+
+        $now = \Carbon\Carbon::now();
+        $englishDay = strtolower($now->englishDayOfWeek);
+        $frenchDay = strtolower($now->locale('fr')->dayName);
+        $arabicDay = strtolower($now->locale('ar')->dayName);
+        $currentTime = $now->format('H:i:s');
+
+        $activeSchedule = Schedule::with(['trainer', 'group'])
+            ->where('space_id', $space->id)
+            ->where(function ($query) use ($englishDay, $frenchDay, $arabicDay) {
+                $query->where('day_of_week', 'like', "%$englishDay%")
+                      ->orWhere('day_of_week', 'like', "%$frenchDay%")
+                      ->orWhere('day_of_week', 'like', "%$arabicDay%");
+            })
+            ->where('start_time', '<=', $currentTime)
+            ->where('end_time', '>=', $currentTime)
+            ->first();
+
+        if ($activeSchedule) {
+            // Determine time remaining safely
+            $endTime = \Carbon\Carbon::parse($activeSchedule->end_time);
+            $mins = $now->diffInMinutes($endTime, false);
+            
+            return response()->json([
+                'active' => true,
+                'subject' => $activeSchedule->subject,
+                'trainer_name' => $activeSchedule->trainer ? $activeSchedule->trainer->first_name . ' ' . $activeSchedule->trainer->last_name : 'No Trainer',
+                'group_name' => $activeSchedule->group ? $activeSchedule->group->name : 'General',
+                'time_remaining' => $mins > 0 ? $mins . ' ' . __('mins remaining') : __('Ending soon')
+            ]);
+        }
+
+        return response()->json(['active' => false]);
+    }
 }

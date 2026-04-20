@@ -22,6 +22,23 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+Route::get('/lang/{locale}', function ($locale) {
+    if (in_array($locale, ['en', 'fr', 'ar'])) {
+        session()->put('locale', $locale);
+        session()->save();
+    }
+    return redirect()->back();
+})->name('lang.switch');
+
+Route::get('/debug-lang', function () {
+    return [
+        'locale' => app()->getLocale(),
+        'session_locale' => session('locale'),
+        'translation' => __('Dashboard'),
+        'config_locale' => config('app.locale'),
+    ];
+});
+
 // Guest routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -62,6 +79,8 @@ Route::middleware(['auth', 'role:employee|admin'])
     ->group(function () {
         Route::get('/trainer/{trainer}', [\App\Http\Controllers\Api\HotspotDataController::class, 'getTrainerInfo']);
         Route::get('/space/{space}/schedules', [\App\Http\Controllers\Api\HotspotDataController::class, 'getSpaceSchedules']);
+        Route::get('/spaces/map-data', [\App\Http\Controllers\Api\HotspotDataController::class, 'mapData']);
+        Route::get('/space/{space}/live', [\App\Http\Controllers\Api\HotspotDataController::class, 'getLiveSchedule']);
     });
 
 // Tour routes

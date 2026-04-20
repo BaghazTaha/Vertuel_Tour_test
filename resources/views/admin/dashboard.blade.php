@@ -1,8 +1,8 @@
 {{-- resources/views/admin/dashboard.blade.php --}}
 @extends('layouts.admin')
 
-@section('title', 'Dashboard')
-@section('page-title', 'Dashboard')
+@section('title', __('Dashboard'))
+@section('page-title', __('Dashboard'))
 
 @section('content')
 
@@ -22,7 +22,7 @@
         </div>
         <div>
             <p class="text-2xl font-bold text-gray-800">{{ $stats['employees'] }}</p>
-            <p class="text-sm text-gray-500">Employees</p>
+            <p class="text-sm text-gray-500">{{ __('Employees') }}</p>
         </div>
     </div>
 
@@ -38,7 +38,7 @@
         </div>
         <div>
             <p class="text-2xl font-bold text-gray-800">{{ $stats['departments'] }}</p>
-            <p class="text-sm text-gray-500">Departments</p>
+            <p class="text-sm text-gray-500">{{ __('Departments') }}</p>
         </div>
     </div>
 
@@ -55,7 +55,7 @@
         </div>
         <div>
             <p class="text-2xl font-bold text-gray-800">{{ $stats['spaces'] }}</p>
-            <p class="text-sm text-gray-500">Spaces / Scenes</p>
+            <p class="text-sm text-gray-500">{{ __('Spaces / Scenes') }}</p>
         </div>
     </div>
 
@@ -72,7 +72,7 @@
         </div>
         <div>
             <p class="text-2xl font-bold text-gray-800">{{ $stats['hotspots'] }}</p>
-            <p class="text-sm text-gray-500">Hotspots</p>
+            <p class="text-sm text-gray-500">{{ __('Hotspots') }}</p>
         </div>
     </div>
 
@@ -84,9 +84,9 @@
     {{-- Recent Employees --}}
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <h2 class="font-semibold text-gray-700 text-sm">Recent Employees</h2>
+            <h2 class="font-semibold text-gray-700 text-sm">{{ __('Recent Employees') }}</h2>
             <a href="{{ route('admin.employees.index') }}"
-               class="text-xs text-indigo-600 hover:underline">View all</a>
+               class="text-xs text-indigo-600 hover:underline">{{ __('View all') }}</a>
         </div>
         <div class="divide-y divide-gray-50">
             @forelse ($recentEmployees as $emp)
@@ -108,7 +108,7 @@
                 <span class="text-xs text-gray-400">{{ $emp->created_at->diffForHumans() }}</span>
             </div>
             @empty
-            <p class="px-6 py-4 text-sm text-gray-400">No employees yet.</p>
+            <p class="px-6 py-4 text-sm text-gray-400">{{ __('No employees yet.') }}</p>
             @endforelse
         </div>
     </div>
@@ -116,9 +116,9 @@
     {{-- Recent Spaces --}}
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <h2 class="font-semibold text-gray-700 text-sm">Recent Spaces</h2>
+            <h2 class="font-semibold text-gray-700 text-sm">{{ __('Recent Spaces') }}</h2>
             <a href="{{ route('admin.spaces.index') }}"
-               class="text-xs text-indigo-600 hover:underline">View all</a>
+               class="text-xs text-indigo-600 hover:underline">{{ __('View all') }}</a>
         </div>
         <div class="divide-y divide-gray-50">
             @forelse ($recentSpaces as $space)
@@ -141,12 +141,12 @@
                 </div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-gray-800 truncate">{{ $space->name }}</p>
-                    <p class="text-xs text-gray-400 truncate">{{ $space->department?->name ?? 'No department' }}</p>
+                    <p class="text-xs text-gray-400 truncate">{{ $space->department?->name ?? __('No department') }}</p>
                 </div>
                 <span class="text-xs text-gray-400">{{ $space->created_at->diffForHumans() }}</span>
             </div>
             @empty
-            <p class="px-6 py-4 text-sm text-gray-400">No spaces yet.</p>
+            <p class="px-6 py-4 text-sm text-gray-400">{{ __('No spaces yet.') }}</p>
             @endforelse
         </div>
     </div>

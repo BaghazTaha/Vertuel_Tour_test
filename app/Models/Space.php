@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Space extends Model
 {
     protected $fillable = [
+        'floor',
         'department_id',
         'name',
         'description',

@@ -1,6 +1,6 @@
 {{-- resources/views/layouts/admin.blade.php --}}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -61,7 +61,7 @@
 ═══════════════════════════════════════════ --}}
 <div id="sidebar-overlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 hidden md:hidden transition-all duration-300"></div>
 
-<aside id="admin-sidebar" class="w-72 min-h-screen bg-navy-900 border-r border-slate-800 text-white flex flex-col fixed top-0 left-0 z-40 shadow-2xl transition-transform duration-300 -translate-x-full md:translate-x-0">
+<aside id="admin-sidebar" class="w-72 min-h-screen bg-navy-900 border-e border-slate-800 text-white flex flex-col fixed top-0 start-0 z-40 shadow-2xl transition-transform duration-300 ltr:-translate-x-full rtl:translate-x-full md:translate-x-0">
 
     {{-- Logo --}}
     <div class="flex items-center gap-4 px-6 py-6 border-b border-white/10">
@@ -75,8 +75,8 @@
             </svg>
         </div>
         <div>
-            <p class="text-base font-bold tracking-wide text-white">Virtual Tour</p>
-            <p class="text-xs text-brand-200 mt-0.5 font-medium uppercase tracking-wider">Admin Panel</p>
+            <p class="text-base font-bold tracking-wide text-white">{{ __('Virtual Tour') }}</p>
+            <p class="text-xs text-brand-200 mt-0.5 font-medium uppercase tracking-wider">{{ __('Admin Panel') }}</p>
         </div>
     </div>
 
@@ -92,7 +92,7 @@
                        2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0
                        011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
             </svg>
-            Dashboard
+            {{ __('Dashboard') }}
         </a>
 
         {{-- Departments --}}
@@ -104,7 +104,7 @@
                        0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1
                        4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
             </svg>
-            Departments
+            {{ __('Departments') }}
         </a>
 
         {{-- Employees --}}
@@ -117,7 +117,7 @@
                        0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0
                        0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            Employees
+            {{ __('Employees') }}
         </a>
 
         {{-- Spaces --}}
@@ -130,7 +130,7 @@
                        14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0
                        00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
-            Spaces
+            {{ __('Spaces') }}
         </a>
 
         {{-- Groups --}}
@@ -143,7 +143,7 @@
                        0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0
                        0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            Groups
+            {{ __('Groups') }}
         </a>
 
         {{-- Trainers --}}
@@ -153,7 +153,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
-            Trainers
+            {{ __('Trainers') }}
         </a>
 
         {{-- Students --}}
@@ -163,7 +163,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"/>
             </svg>
-            Students
+            {{ __('Students') }}
         </a>
 
         {{-- Schedules --}}
@@ -173,7 +173,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
-            Schedules
+            {{ __('Schedules') }}
         </a>
 
     </nav>
@@ -186,8 +186,8 @@
                     {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
                 </div>
                 <div class="min-w-0">
-                    <p class="text-sm font-semibold text-white truncate">{{ Auth::user()->name ?? 'Admin User' }}</p>
-                    <p class="text-xs text-slate-400 truncate">Administrator</p>
+                    <p class="text-sm font-semibold text-white truncate">{{ Auth::user()->name ?? __('Admin User') }}</p>
+                    <p class="text-xs text-slate-400 truncate">{{ __('Administrator') }}</p>
                 </div>
             </div>
             <form method="POST" action="{{ route('logout') }}">
@@ -200,7 +200,7 @@
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0
                                01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                     </svg>
-                    Sign out
+                    {{ __('Sign out') }}
                 </button>
             </form>
         </div>
@@ -210,7 +210,7 @@
 {{-- ═══════════════════════════════════════════
      MAIN CONTENT
 ═══════════════════════════════════════════ --}}
-<div class="flex-1 ml-0 md:ml-72 flex flex-col min-h-screen relative">
+<div class="flex-1 ms-0 md:ms-72 flex flex-col min-h-screen relative">
 
     {{-- Top bar --}}
     <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 md:px-8 py-5 flex items-center justify-between sticky top-0 z-20 shadow-sm">
@@ -221,22 +221,52 @@
                     <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
             </button>
-            <h1 class="text-xl md:text-2xl font-bold text-navy-900 tracking-tight truncate">@yield('page-title', 'Dashboard')</h1>
+            <h1 class="text-xl md:text-2xl font-bold text-navy-900 tracking-tight truncate">@yield('page-title', __('Dashboard'))</h1>
         </div>
-        <div class="flex items-center gap-3 px-4 py-2 bg-slate-100 rounded-full text-sm text-slate-600 font-medium">
-            <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0
-                       002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            {{ now()->format('D, M d Y') }}
+        <div class="flex items-center gap-2 sm:gap-4">
+            <div class="flex items-center gap-3 px-4 py-2 bg-slate-100 rounded-full text-sm text-slate-600 font-medium border border-slate-200 shrink-0">
+                <svg class="w-4 h-4 text-brand-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0
+                           002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                {{ now()->format('D, M d Y') }}
+            </div>
+            
+            {{-- Topbar Sign Out Button --}}
+            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                @csrf
+                <button type="submit" 
+                        class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 rounded-full transition-colors shadow-sm"
+                        title="Sign Out">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    <span class="hidden sm:inline">{{ __('Sign out') }}</span>
+                </button>
+            </form>
+            
+            {{-- Language Dropdown --}}
+            <div class="relative group" tabindex="0">
+                <button class="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-full transition-colors shadow-sm focus:outline-none">
+                    🌍 {{ strtoupper(app()->getLocale()) }}
+                </button>
+                <div class="absolute end-0 mt-2 w-32 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible focus-within:opacity-100 focus-within:visible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div class="py-2">
+                        <a href="{{ route('lang.switch', 'fr') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-600 {{ app()->getLocale() == 'fr' ? 'font-bold bg-brand-50 text-brand-600' : '' }}">🇫🇷 Français</a>
+                        <a href="{{ route('lang.switch', 'en') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-600 {{ app()->getLocale() == 'en' ? 'font-bold bg-brand-50 text-brand-600' : '' }}">🇬🇧 English</a>
+                        <a href="{{ route('lang.switch', 'ar') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-600 {{ app()->getLocale() == 'ar' ? 'font-bold bg-brand-50 text-brand-600' : '' }}">🇲🇦 عربي</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
     {{-- Flash messages (Toast style) --}}
-    <div class="fixed top-24 right-8 z-50 flex flex-col gap-3 max-w-sm w-full">
+    <div class="fixed top-24 end-8 z-50 flex flex-col gap-3 max-w-sm w-full">
         @if (session('success'))
-            <div class="flex items-start gap-3 bg-white border border-green-100 shadow-xl shadow-green-500/10 rounded-2xl p-4 animate-fade-in-down border-l-4 border-l-green-500">
+            <div class="flex items-start gap-3 bg-white border border-green-100 shadow-xl shadow-green-500/10 rounded-2xl p-4 animate-fade-in-down border-s-4 border-s-green-500">
                 <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -250,7 +280,7 @@
         @endif
 
         @if (session('error'))
-            <div class="flex items-start gap-3 bg-white border border-red-100 shadow-xl shadow-red-500/10 rounded-2xl p-4 animate-fade-in-down border-l-4 border-l-red-500">
+            <div class="flex items-start gap-3 bg-white border border-red-100 shadow-xl shadow-red-500/10 rounded-2xl p-4 animate-fade-in-down border-s-4 border-s-red-500">
                 <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -285,6 +315,7 @@
         const icon = document.getElementById('menu-icon');
         
         const isOpen = sidebar.classList.contains('translate-x-0');
+        
         
         if (isOpen) {
             sidebar.classList.remove('translate-x-0');
