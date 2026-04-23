@@ -41,7 +41,7 @@
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
         /* Pannellum overrides */
-        #panorama { width: 100%; height: 100vh; background-color: #0f172a; }
+        #panorama { width: 100%; height: 100vh; background-color: #0f172a; direction: ltr !important; }
         .pnlm-container { background: transparent !important; }
         .pnlm-load-box { background: rgba(15, 23, 42, 0.8) !important; border-radius: 20px !important; backdrop-filter: blur(10px); }
         
@@ -237,6 +237,11 @@
         </div>
 
         <div class="p-4 border-t border-white/10 bg-white/5 space-y-2">
+            @if(Auth::user()->hasRole('student') || Auth::user()->hasRole('trainer'))
+                <button onclick="loadMyScheduleAPI()" class="block w-full text-center py-2.5 rounded-xl text-xs font-semibold bg-sky-500/20 text-sky-400 border border-sky-500/20 hover:bg-sky-500/30 transition-all mb-2">
+                    📅 {{ __('My Weekly Schedule') }}
+                </button>
+            @endif
             @if(Auth::user()->hasRole('employee'))
                 <a href="{{ route('tour.profile') }}" class="block w-full text-center py-2.5 rounded-xl text-xs font-semibold glass hover:bg-brand-500/20 hover:text-brand-400 border border-brand-500/20 transition-all">
                     {{ __('My Profile') }}
@@ -408,7 +413,7 @@
                         "createTooltipFunc": renderCustomHotspot,
                         "createTooltipArgs": {
                             "type": "{{ $hs->type }}",
-                            "text": "{{ addslashes($hs->label ?? ($hs->employee ? $hs->employee->full_name : ($hs->trainer ? $hs->trainer->first_name.' '.$hs->trainer->last_name : ($hs->targetScene ? $hs->targetScene->name : 'Room Schedule')))) }}",
+                            "text": {!! json_encode($hs->label ?? ($hs->employee ? $hs->employee->full_name : ($hs->trainer ? $hs->trainer->first_name.' '.$hs->trainer->last_name : ($hs->targetScene ? $hs->targetScene->name : 'Room Schedule')))) !!},
                             "photo": "{{ $hs->employee && $hs->employee->photo_url ? $hs->employee->photo_url : ($hs->type === 'trainer' && $hs->trainer && $hs->trainer->photo ? asset('storage/'.$hs->trainer->photo) : '') }}"
                             @if($hs->type === 'scene' && $hs->target_scene_id)
                             , "targetSceneId": "space_{{ $hs->target_scene_id }}"
@@ -673,6 +678,63 @@
                 .catch(err => {
                     console.error("Schedule Fetch Error API: ", err);
                     content.innerHTML = `<p class="text-red-400 text-center text-sm py-10">An error occurred while loading schedule data.<br><span class="text-xs text-white/50">` + err.message.substring(0,60) + `</span></p>`;
+                });
+        }
+
+        function loadMyScheduleAPI() {
+            const content = document.getElementById('schedule-content');
+            content.innerHTML = `<div class="text-center py-10"><svg class="animate-spin h-8 w-8 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
+            
+            const card = document.getElementById('schedule-card');
+            const title = card.querySelector('h2');
+            title.innerHTML = `<svg class="w-7 h-7 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> {{ __('Weekly Schedule') }}`;
+
+            card.classList.remove('scale-0', 'opacity-0');
+            card.classList.add('scale-100', 'opacity-100');
+
+            fetch(`/api/my-schedule`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(async res => {
+                    if (!res.ok) {
+                        throw new Error(await res.text() || 'Network error');
+                    }
+                    return res.json();
+                })
+                .then(schedules => {
+                    if (!schedules || !schedules.length) {
+                        content.innerHTML = `<div class="text-center py-8"><p class="text-slate-400 text-sm">Aucun cours planifié.</p></div>`;
+                        return;
+                    }
+                    
+                    let html = '';
+                    schedules.forEach(s => {
+                        let st = s.start_time ? s.start_time.substring(0, 5) : '--:--';
+                        let et = s.end_time ? s.end_time.substring(0, 5) : '--:--';
+                        let trainerName = s.trainer ? (s.trainer.first_name + ' ' + s.trainer.last_name) : 'Formateur inconnu';
+                        let groupName = s.group ? s.group.name : 'Groupe inconnu';
+                        let spaceName = s.space ? s.space.name : 'Salle inconnue';
+                        
+                        html += `
+                        <div class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                            <div class="flex flex-col min-w-[70px]">
+                                <span class="text-xs font-bold text-sky-400 uppercase tracking-widest mb-1">${s.day_of_week || '-'}</span>
+                                <span class="text-lg font-bold text-white">${st} - ${et}</span>
+                            </div>
+                            <div class="flex-1 px-4 sm:px-6 overflow-hidden">
+                                <p class="text-base font-semibold text-white truncate" title="${s.subject || ''}">${s.subject || 'Matière inconnue'}</p>
+                                <p class="text-xs text-slate-400 mt-1 truncate">Salle: <span class="text-slate-200">${spaceName}</span> | ${s.trainer ? 'Formateur: ' + trainerName : 'Groupe: ' + groupName}</p>
+                            </div>
+                        </div>`;
+                    });
+                    content.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error("Schedule Fetch Error API: ", err);
+                    content.innerHTML = `<p class="text-red-400 text-center text-sm py-10">An error occurred while loading schedule data.</p>`;
                 });
         }
 

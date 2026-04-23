@@ -166,6 +166,16 @@
             {{ __('Students') }}
         </a>
 
+        {{-- Accounts --}}
+        <a href="{{ route('admin.accounts.index') }}"
+           class="nav-link {{ request()->routeIs('admin.accounts.*') ? 'nav-link-active' : 'nav-link-inactive' }}">
+            <svg class="w-5 h-5 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 003 20c0-2.554 1.442-4.76 3.546-5.859m5.908 4.609A10.002 10.002 0 0112 20c0-2.554-1.442-4.76-3.546-5.859M11 14h.01M12 7a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+            {{ __('Accounts') }}
+        </a>
+
         {{-- Schedules --}}
         <a href="{{ route('admin.schedules.index') }}"
            class="nav-link {{ request()->routeIs('admin.schedules.*') ? 'nav-link-active' : 'nav-link-inactive' }}">

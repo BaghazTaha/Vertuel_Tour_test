@@ -42,6 +42,7 @@ class EmployeeController extends Controller
             'email'         => 'required|email|unique:employees,email|unique:users,email',
             'phone'         => 'nullable|string|max:50',
             'photo'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'sex'           => 'nullable|in:male,female',
         ]);
 
         // Photo upload
@@ -56,6 +57,8 @@ class EmployeeController extends Controller
             'email'    => $request->email,
             'password' => Hash::make('password'),
             'role'     => 'employee',
+            'sex'      => $request->sex,
+            'must_change_password' => true,
         ]);
         $user->assignRole('employee');
 
@@ -104,6 +107,7 @@ class EmployeeController extends Controller
                                . '|unique:users,email,' . $employee->user_id,
             'phone'         => 'nullable|string|max:50',
             'photo'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'sex'           => 'nullable|in:male,female',
         ]);
 
         $data = $request->only([
@@ -130,6 +134,7 @@ class EmployeeController extends Controller
             $employee->user->update([
                 'name'  => $request->first_name . ' ' . $request->last_name,
                 'email' => $request->email,
+                'sex'   => $request->sex,
             ]);
         }
 

@@ -17,6 +17,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'sex',
+        'must_change_password',
     ];
 
     protected $hidden = [
@@ -27,8 +29,9 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+            'email_verified_at'    => 'datetime',
+            'password'             => 'hashed',
+            'must_change_password' => 'boolean',
         ];
     }
 
@@ -37,6 +40,16 @@ class User extends Authenticatable
     public function employee(): HasOne
     {
         return $this->hasOne(Employee::class);
+    }
+
+    public function trainer(): HasOne
+    {
+        return $this->hasOne(Trainer::class);
+    }
+
+    public function student(): HasOne
+    {
+        return $this->hasOne(Student::class);
     }
 
     /* ---------- Helpers ---------- */
@@ -49,6 +62,27 @@ class User extends Authenticatable
     public function isEmployee(): bool
     {
         return $this->hasRole('employee');
+    }
+
+    public function isTrainer(): bool
+    {
+        return $this->hasRole('trainer');
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->hasRole('student');
+    }
+
+    public static function generateEmail(string $firstName, string $lastName): string
+    {
+        $firstName = strtolower(trim($firstName));
+        $lastName = strtolower(trim($lastName));
+        
+        $firstName = preg_replace('/\s+/', '.', $firstName);
+        $lastName = preg_replace('/\s+/', '.', $lastName);
+        
+        return "{$firstName}.{$lastName}@company.com";
     }
 }
 

@@ -21,6 +21,7 @@ class EmployeeSeeder extends Seeder
                 'department' => 'Human Resources',
                 'email'      => 'youssef.elamrani@company.com',
                 'phone'      => '+212 600-000001',
+                'sex'        => 'male',
             ],
             [
                 'first_name' => 'Salma',
@@ -30,6 +31,7 @@ class EmployeeSeeder extends Seeder
                 'department' => 'Information Technology',
                 'email'      => 'salma.benali@company.com',
                 'phone'      => '+212 600-000002',
+                'sex'        => 'female',
             ],
             [
                 'first_name' => 'Karim',
@@ -39,6 +41,7 @@ class EmployeeSeeder extends Seeder
                 'department' => 'Finance',
                 'email'      => 'karim.idrissi@company.com',
                 'phone'      => '+212 600-000003',
+                'sex'        => 'male',
             ],
             [
                 'first_name' => 'Nadia',
@@ -48,6 +51,7 @@ class EmployeeSeeder extends Seeder
                 'department' => 'Marketing',
                 'email'      => 'nadia.cherkaoui@company.com',
                 'phone'      => '+212 600-000004',
+                'sex'        => 'female',
             ],
             [
                 'first_name' => 'Omar',
@@ -57,6 +61,7 @@ class EmployeeSeeder extends Seeder
                 'department' => 'Operations',
                 'email'      => 'omar.tazi@company.com',
                 'phone'      => '+212 600-000005',
+                'sex'        => 'male',
             ],
         ];
 
@@ -70,6 +75,7 @@ class EmployeeSeeder extends Seeder
                     'name'     => $data['first_name'] . ' ' . $data['last_name'],
                     'password' => Hash::make('password'),
                     'role'     => 'employee',
+                    'sex'      => $data['sex'],
                 ]
             );
             $user->assignRole('employee');

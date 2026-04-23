@@ -8,7 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Trainer extends Model
 {
-    protected $fillable = ['first_name', 'last_name', 'email', 'phone', 'specialty', 'department_id', 'photo'];
+    protected $fillable = ['user_id', 'first_name', 'last_name', 'sex', 'email', 'phone', 'specialty', 'department_id', 'photo'];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function department(): BelongsTo
     {

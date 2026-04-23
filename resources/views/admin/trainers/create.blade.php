@@ -27,14 +27,34 @@
                     @error('last_name') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
                 </div>
             </div>
+            </div>
+
+            <!-- Sex -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Gender / Sexe <span class="text-red-500">*</span></label>
+                <div class="flex gap-6">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="sex" value="male" required {{ old('sex') == 'male' ? 'checked' : '' }}
+                               class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                        <span class="text-sm text-gray-600">Male / Homme</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="sex" value="female" required {{ old('sex') == 'female' ? 'checked' : '' }}
+                               class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                        <span class="text-sm text-gray-600">Female / Femme</span>
+                    </label>
+                </div>
+                @error('sex') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
+            </div>
 
             <div class="grid grid-cols-2 gap-6">
-                <!-- Email -->
+                <!-- Email (Automated) -->
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
-                    <input type="email" name="email" id="email" required value="{{ old('email') }}"
-                           class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    @error('email') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <div class="px-4 py-2 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 text-sm">
+                        Generated automatically: <span class="font-mono">fn.ln@company.com</span>
+                    </div>
+                    <p class="mt-1.5 text-xs text-gray-400 font-medium">Syntax: firstname.lastname@company.com</p>
                 </div>
 
                 <!-- Phone -->

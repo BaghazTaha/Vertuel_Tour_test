@@ -7,7 +7,8 @@ use App\Models\Student;
 use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class StudentController extends Controller
 {
@@ -28,11 +29,13 @@ class StudentController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:students,email',
             'phone' => 'nullable|string|max:255',
             'group_id' => 'required|exists:groups,id',
             'photo' => 'nullable|image|max:2048'
         ]);
+
+        $email = User::generateEmail($validated['first_name'], $validated['last_name']);
+        $validated['email'] = $email;
 
         $group = Group::withCount('students')->findOrFail($validated['group_id']);
         if ($group->students_count >= $group->max_capacity) {
@@ -44,6 +47,18 @@ class StudentController extends Controller
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('students', 'public');
         }
+
+        // Create linked user account
+        $user = User::create([
+            'name'     => $request->first_name . ' ' . $request->last_name,
+            'email'    => $email,
+            'password' => Hash::make('password'), // default password
+            'role'     => 'student',
+            'must_change_password' => true,
+        ]);
+        $user->assignRole('student');
+
+        $validated['user_id'] = $user->id;
 
         Student::create($validated);
 
@@ -67,11 +82,13 @@ class StudentController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:students,email,' . $student->id,
             'phone' => 'nullable|string|max:255',
             'group_id' => 'required|exists:groups,id',
             'photo' => 'nullable|image|max:2048'
         ]);
+
+        $email = User::generateEmail($validated['first_name'], $validated['last_name']);
+        $validated['email'] = $email;
 
         if ($validated['group_id'] != $student->group_id) {
             $group = Group::withCount('students')->findOrFail($validated['group_id']);
@@ -89,6 +106,14 @@ class StudentController extends Controller
 
         $student->update($validated);
 
+        // Update linked user
+        if ($student->user) {
+            $student->user->update([
+                'name' => $request->first_name . ' ' . $request->last_name,
+                'email' => $email,
+            ]);
+        }
+
         return redirect()->route('admin.students.index')
             ->with('success', 'Student updated successfully.');
     }
@@ -96,6 +121,12 @@ class StudentController extends Controller
     public function destroy(Student $student)
     {
         if ($student->photo) Storage::disk('public')->delete($student->photo);
+        
+        // Delete linked user
+        if ($student->user) {
+            $student->user->delete();
+        }
+
         $student->delete();
 
         return redirect()->route('admin.students.index')

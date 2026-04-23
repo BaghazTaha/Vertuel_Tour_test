@@ -25,6 +25,7 @@
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Photo</th>
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Name & Specialty</th>
                     <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</th>
+                    <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Gender</th>
                     <th class="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Department</th>
                     <th class="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -51,6 +52,9 @@
                     <td class="px-6 py-4 text-gray-500">
                         {{ $trainer->email }}<br>
                         <span class="text-xs text-gray-400">{{ $trainer->phone ?? '—' }}</span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-500 capitalize">
+                        {{ $trainer->sex ?? '—' }}
                     </td>
                     <td class="px-6 py-4 text-center">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700">

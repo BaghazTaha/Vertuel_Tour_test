@@ -102,4 +102,22 @@ class HotspotDataController extends Controller
 
         return response()->json(['active' => false]);
     }
+
+    public function getMySchedule()
+    {
+        $user = auth()->user();
+        $query = Schedule::with(['trainer', 'group', 'space'])
+            ->orderBy('day_of_week')
+            ->orderBy('start_time');
+
+        if ($user->isStudent() && $user->student) {
+            $query->where('group_id', $user->student->group_id);
+        } elseif ($user->isTrainer() && $user->trainer) {
+            $query->where('trainer_id', $user->trainer->id);
+        } else {
+            return response()->json([]);
+        }
+
+        return response()->json($query->get());
+    }
 }

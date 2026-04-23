@@ -60,10 +60,24 @@
                    class="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none
                           focus:ring-2 focus:ring-indigo-500
                           {{ $errors->has('last_name') ? 'border-red-400 bg-red-50' : 'border-gray-300' }}"/>
-            @error('last_name')
-                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-            @enderror
+    </div>
+
+    {{-- Sex --}}
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Gender / Sexe <span class="text-red-500">*</span></label>
+        <div class="flex gap-6">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="sex" value="male" required {{ old('sex') == 'male' ? 'checked' : '' }}
+                       class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                <span class="text-sm text-gray-600">Male / Homme</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="sex" value="female" required {{ old('sex') == 'female' ? 'checked' : '' }}
+                       class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                <span class="text-sm text-gray-600">Female / Femme</span>
+            </label>
         </div>
+        @error('sex') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
     </div>
 
     {{-- Matricule + Job title --}}

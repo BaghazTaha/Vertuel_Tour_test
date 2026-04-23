@@ -7,6 +7,9 @@ use App\Models\Trainer;
 use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+
 
 class TrainerController extends Controller
 {
@@ -28,16 +31,32 @@ class TrainerController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:trainers,email',
             'phone' => 'nullable|string|max:255',
             'specialty' => 'required|string|max:255',
             'department_id' => 'required|exists:departments,id',
-            'photo' => 'nullable|image|max:2048'
+            'photo' => 'nullable|image|max:2048',
+            'sex' => 'nullable|in:male,female',
         ]);
+
+        $email = User::generateEmail($validated['first_name'], $validated['last_name']);
+        $validated['email'] = $email;
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('trainers', 'public');
         }
+
+        // Create linked user account
+        $user = User::create([
+            'name'     => $request->first_name . ' ' . $request->last_name,
+            'email'    => $email,
+            'password' => Hash::make('password'), // default password
+            'role'     => 'trainer',
+            'sex'      => $request->sex,
+            'must_change_password' => true,
+        ]);
+        $user->assignRole('trainer');
+
+        $validated['user_id'] = $user->id;
 
         Trainer::create($validated);
 
@@ -61,12 +80,15 @@ class TrainerController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:trainers,email,' . $trainer->id,
             'phone' => 'nullable|string|max:255',
             'specialty' => 'required|string|max:255',
             'department_id' => 'required|exists:departments,id',
-            'photo' => 'nullable|image|max:2048'
+            'photo' => 'nullable|image|max:2048',
+            'sex' => 'nullable|in:male,female',
         ]);
+
+        $email = User::generateEmail($validated['first_name'], $validated['last_name']);
+        $validated['email'] = $email;
 
         if ($request->hasFile('photo')) {
             if ($trainer->photo) Storage::disk('public')->delete($trainer->photo);
@@ -75,6 +97,15 @@ class TrainerController extends Controller
 
         $trainer->update($validated);
 
+        // Update linked user
+        if ($trainer->user) {
+            $trainer->user->update([
+                'name' => $request->first_name . ' ' . $request->last_name,
+                'email' => $email,
+                'sex' => $request->sex,
+            ]);
+        }
+
         return redirect()->route('admin.trainers.index')
             ->with('success', 'Trainer updated successfully.');
     }
@@ -82,6 +113,12 @@ class TrainerController extends Controller
     public function destroy(Trainer $trainer)
     {
         if ($trainer->photo) Storage::disk('public')->delete($trainer->photo);
+        
+        // Delete linked user
+        if ($trainer->user) {
+            $trainer->user->delete();
+        }
+
         $trainer->delete();
 
         return redirect()->route('admin.trainers.index')

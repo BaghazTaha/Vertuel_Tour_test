@@ -45,6 +45,12 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 });
 
+// Password change (forced)
+Route::middleware('auth')->group(function () {
+    Route::get('/change-password', [App\Http\Controllers\Auth\PasswordController::class, 'edit'])->name('password.change');
+    Route::put('/change-password', [App\Http\Controllers\Auth\PasswordController::class, 'update'])->name('password.update');
+});
+
 // Logout
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
@@ -66,6 +72,12 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('trainers',    \App\Http\Controllers\Admin\TrainerController::class);
         Route::resource('schedules',   \App\Http\Controllers\Admin\ScheduleController::class);
 
+        // Account Management
+        Route::get('/accounts', [\App\Http\Controllers\Admin\AccountController::class, 'index'])->name('accounts.index');
+        Route::post('/accounts/{user}/reset-password', [\App\Http\Controllers\Admin\AccountController::class, 'resetPassword'])->name('accounts.reset-password');
+        Route::post('/accounts/{user}/toggle-must-change', [\App\Http\Controllers\Admin\AccountController::class, 'toggleMustChangePassword'])->name('accounts.toggle-must-change');
+        Route::delete('/accounts/{user}', [\App\Http\Controllers\Admin\AccountController::class, 'destroy'])->name('accounts.destroy');
+
         // Hotspot routes (nested under spaces)
         Route::get('/spaces/{space}/hotspots', [HotspotController::class, 'index'])->name('spaces.hotspots.index');
         Route::post('/spaces/{space}/hotspots', [HotspotController::class, 'store'])->name('spaces.hotspots.store');
@@ -74,17 +86,18 @@ Route::middleware(['auth', 'role:admin'])
     });
 
 // API routes for hotspots
-Route::middleware(['auth', 'role:employee|admin'])
+Route::middleware(['auth', 'role:employee|admin|trainer|student'])
     ->prefix('api')
     ->group(function () {
         Route::get('/trainer/{trainer}', [\App\Http\Controllers\Api\HotspotDataController::class, 'getTrainerInfo']);
         Route::get('/space/{space}/schedules', [\App\Http\Controllers\Api\HotspotDataController::class, 'getSpaceSchedules']);
         Route::get('/spaces/map-data', [\App\Http\Controllers\Api\HotspotDataController::class, 'mapData']);
         Route::get('/space/{space}/live', [\App\Http\Controllers\Api\HotspotDataController::class, 'getLiveSchedule']);
+        Route::get('/my-schedule', [\App\Http\Controllers\Api\HotspotDataController::class, 'getMySchedule']);
     });
 
 // Tour routes
-Route::middleware(['auth', 'role:employee|admin'])
+Route::middleware(['auth', 'role:employee|admin|trainer|student'])
     ->prefix('tour')
     ->name('tour.')
     ->group(function () {

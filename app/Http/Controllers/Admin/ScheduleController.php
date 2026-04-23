@@ -13,15 +13,58 @@ use Illuminate\Validation\ValidationException;
 
 class ScheduleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // On sécurise et on trie l'emploi du temps
-        $schedules = Schedule::with(['space', 'trainer', 'group'])
-            ->orderBy('day_of_week')
+        $query = Schedule::with(['space', 'trainer', 'group']);
+
+        // Filtering
+        if ($request->filled('day')) {
+            $query->where('day_of_week', $request->day);
+        }
+        if ($request->filled('group_id')) {
+            $query->where('group_id', $request->group_id);
+        }
+        if ($request->filled('space_id')) {
+            $query->where('space_id', $request->space_id);
+        }
+        if ($request->filled('trainer_id')) {
+            $query->where('trainer_id', $request->trainer_id);
+        }
+        if ($request->filled('subject')) {
+            $query->where('subject', 'like', '%' . $request->subject . '%');
+        }
+
+        $schedules = $query->orderBy('day_of_week')
             ->orderBy('start_time')
-            ->paginate(15);
+            ->get();
+
+        $days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+        $time_slots = [
+            '08:30-09:30', '09:30-10:30', '10:30-11:30', '11:30-12:30', 
+            '12:30-13:30', '13:30-14:30', '14:30-15:30', '15:30-16:30', 
+            '16:30-17:30', '17:30-18:30'
+        ];
+
+        // Group schedules by day and time slot for the grid
+        $grid = [];
+        foreach ($days as $day) {
+            foreach ($time_slots as $slot) {
+                list($start, $end) = explode('-', $slot);
+                $grid[$day][$slot] = $schedules->filter(function ($s) use ($day, $start, $end) {
+                    $sessionStart = substr($s->start_time, 0, 5);
+                    $sessionEnd = substr($s->end_time, 0, 5);
+                    return $s->day_of_week === $day && 
+                           $sessionStart < $end && 
+                           $sessionEnd > $start;
+                });
+            }
+        }
+
+        $groups = Group::all();
+        $spaces = Space::all();
+        $trainers = Trainer::all();
             
-        return view('admin.schedules.index', compact('schedules'));
+        return view('admin.schedules.index', compact('schedules', 'grid', 'days', 'time_slots', 'groups', 'spaces', 'trainers'));
     }
 
     public function create()
