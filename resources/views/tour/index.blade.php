@@ -650,28 +650,40 @@
                     }
                     
                     let html = '';
+                    let isTrainerUser = {{ Auth::user() && Auth::user()->hasRole('trainer') ? 'true' : 'false' }};
+                    let currentTrainerId = {{ Auth::user() && Auth::user()->hasRole('trainer') && Auth::user()->trainer ? Auth::user()->trainer->id : 'null' }};
+                    
                     schedules.forEach(s => {
                         let st = s.start_time ? s.start_time.substring(0, 5) : '--:--';
                         let et = s.end_time ? s.end_time.substring(0, 5) : '--:--';
                         let trainerName = s.trainer ? (s.trainer.first_name + ' ' + s.trainer.last_name) : 'Formateur inconnu';
                         let groupName = s.group ? s.group.name : 'Groupe inconnu';
                         
+                        let isMySession = isTrainerUser && s.trainer_id == currentTrainerId;
+                        let tag = isMySession ? 'a' : 'div';
+                        let href = isMySession ? `href="/trainer/schedule/${s.id}/attendances"` : '';
+                        let hoverStyle = isMySession ? 'hover:bg-white/20 cursor-pointer border-sky-500/20 hover:border-sky-500/50 block' : 'hover:bg-white/10 border-white/10 flex';
+                        
+                        // We use Flex inside since wrapper is block if it's an anchor to maintain styling 
                         html += `
-                        <div class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                            <div class="flex flex-col min-w-[70px]">
-                                <span class="text-xs font-bold text-sky-400 uppercase tracking-widest mb-1">${s.day_of_week || '-'}</span>
-                                <span class="text-lg font-bold text-white">${st} - ${et}</span>
+                        <${tag} ${href} class="${hoverStyle} items-center justify-between p-4 rounded-2xl bg-white/5 border transition-colors mb-2">
+                            <div class="flex items-center justify-between w-full">
+                                <div class="flex flex-col min-w-[70px]">
+                                    <span class="text-xs font-bold text-sky-400 uppercase tracking-widest mb-1">${s.day_of_week || '-'}</span>
+                                    <span class="text-lg font-bold text-white">${st} - ${et}</span>
+                                </div>
+                                <div class="flex-1 px-4 sm:px-6 overflow-hidden">
+                                    <p class="text-base font-semibold text-white truncate" title="${s.subject || ''}">${s.subject || 'Matière inconnue'}</p>
+                                    <p class="text-xs text-slate-400 mt-1 truncate">Formateur: <span class="text-slate-200">${trainerName}</span></p>
+                                </div>
+                                <div class="text-right shrink-0 flex items-center justify-end gap-2">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-white/10 border border-white/20 text-white shadow-sm uppercase">
+                                        ${groupName}
+                                    </span>
+                                    ${isMySession ? `<svg class="w-5 h-5 text-sky-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>` : ''}
+                                </div>
                             </div>
-                            <div class="flex-1 px-4 sm:px-6 overflow-hidden">
-                                <p class="text-base font-semibold text-white truncate" title="${s.subject || ''}">${s.subject || 'Matière inconnue'}</p>
-                                <p class="text-xs text-slate-400 mt-1 truncate">Formateur: <span class="text-slate-200">${trainerName}</span></p>
-                            </div>
-                            <div class="text-right shrink-0">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-white/10 border border-white/20 text-white shadow-sm uppercase">
-                                    ${groupName}
-                                </span>
-                            </div>
-                        </div>`;
+                        </${tag}>`;
                     });
                     content.innerHTML = html;
                 })
@@ -711,6 +723,8 @@
                     }
                     
                     let html = '';
+                    let isTrainer = {{ Auth::user() && Auth::user()->hasRole('trainer') ? 'true' : 'false' }};
+                    
                     schedules.forEach(s => {
                         let st = s.start_time ? s.start_time.substring(0, 5) : '--:--';
                         let et = s.end_time ? s.end_time.substring(0, 5) : '--:--';
@@ -718,8 +732,12 @@
                         let groupName = s.group ? s.group.name : 'Groupe inconnu';
                         let spaceName = s.space ? s.space.name : 'Salle inconnue';
                         
+                        let tag = isTrainer ? 'a' : 'div';
+                        let href = isTrainer ? `href="/trainer/schedule/${s.id}/attendances"` : '';
+                        let hoverStyle = isTrainer ? 'hover:bg-white/20 cursor-pointer border-sky-500/20 hover:border-sky-500/50' : 'hover:bg-white/10 border-white/10';
+                        
                         html += `
-                        <div class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                        <${tag} ${href} class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border transition-all ${hoverStyle} mb-2 block">
                             <div class="flex flex-col min-w-[70px]">
                                 <span class="text-xs font-bold text-sky-400 uppercase tracking-widest mb-1">${s.day_of_week || '-'}</span>
                                 <span class="text-lg font-bold text-white">${st} - ${et}</span>
@@ -728,7 +746,8 @@
                                 <p class="text-base font-semibold text-white truncate" title="${s.subject || ''}">${s.subject || 'Matière inconnue'}</p>
                                 <p class="text-xs text-slate-400 mt-1 truncate">Salle: <span class="text-slate-200">${spaceName}</span> | ${s.trainer ? 'Formateur: ' + trainerName : 'Groupe: ' + groupName}</p>
                             </div>
-                        </div>`;
+                            ${isTrainer ? `<div class="shrink-0 ms-2 text-sky-400/50"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>` : ''}
+                        </${tag}>`;
                     });
                     content.innerHTML = html;
                 })

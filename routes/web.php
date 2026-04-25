@@ -78,6 +78,12 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/accounts/{user}/toggle-must-change', [\App\Http\Controllers\Admin\AccountController::class, 'toggleMustChangePassword'])->name('accounts.toggle-must-change');
         Route::delete('/accounts/{user}', [\App\Http\Controllers\Admin\AccountController::class, 'destroy'])->name('accounts.destroy');
 
+        // Attendances Management
+        Route::get('/attendances', [\App\Http\Controllers\Admin\AttendanceController::class, 'index'])->name('attendances.index');
+        Route::patch('/attendances/validate-session', [\App\Http\Controllers\Admin\AttendanceController::class, 'validateSession'])->name('attendances.validate-session');
+        Route::patch('/attendances/{attendance}/update', [\App\Http\Controllers\Admin\AttendanceController::class, 'update'])->name('attendances.update');
+        Route::get('/attendances/stats', [\App\Http\Controllers\Admin\AttendanceController::class, 'stats'])->name('attendances.stats');
+
         // Hotspot routes (nested under spaces)
         Route::get('/spaces/{space}/hotspots', [HotspotController::class, 'index'])->name('spaces.hotspots.index');
         Route::post('/spaces/{space}/hotspots', [HotspotController::class, 'store'])->name('spaces.hotspots.store');
@@ -108,6 +114,16 @@ Route::middleware(['auth', 'role:employee|admin|trainer|student'])
 // Public QR profile — no login required
 Route::get('/employee/{matricule}', [EmployeePublicController::class, 'show'])
     ->name('employee.public');
+
+// Trainer routes
+Route::middleware(['auth', 'role:trainer'])
+    ->prefix('trainer')
+    ->name('trainer.')
+    ->group(function () {
+        Route::get('/schedule', [\App\Http\Controllers\Trainer\AttendanceController::class, 'schedule'])->name('schedule');
+        Route::get('/schedule/{schedule}/attendances', [\App\Http\Controllers\Trainer\AttendanceController::class, 'index'])->name('attendances.index');
+        Route::post('/schedule/{schedule}/attendances', [\App\Http\Controllers\Trainer\AttendanceController::class, 'store'])->name('attendances.store');
+    });
 
 
 
