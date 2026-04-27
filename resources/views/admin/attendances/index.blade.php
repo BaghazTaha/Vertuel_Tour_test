@@ -37,8 +37,8 @@
                         </span>
                     @endif
                 </div>
-                <h4 class="font-bold text-gray-800 text-sm mb-1">{{ $data->schedule->subject }}</h4>
-                <p class="text-xs text-gray-500 mb-2">Trainer: {{ $data->schedule->trainer->first_name }} {{ $data->schedule->trainer->last_name }}</p>
+                <h4 class="font-bold text-gray-800 text-sm mb-1">{{ $data->schedule?->subject ?? 'Séance supprimée' }}</h4>
+                <p class="text-xs text-gray-500 mb-2">Trainer: {{ $data->schedule?->trainer?->first_name ?? 'Inconnu' }} {{ $data->schedule?->trainer?->last_name ?? '' }}</p>
                 <div class="flex gap-3 text-xs">
                     <span class="text-emerald-600 font-medium">{{ $data->present_count }} Présents</span>
                     <span class="text-red-600 font-medium">{{ $data->absent_count }} Absents</span>
