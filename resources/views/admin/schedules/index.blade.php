@@ -86,45 +86,61 @@
             </thead>
             <tbody>
                 @foreach($days as $day)
+                @php $tracks = $grid[$day]; @endphp
+                @foreach($tracks as $trackIndex => $track)
                 <tr>
-                    <td class="border border-gray-100 bg-indigo-50 p-3 font-bold text-indigo-900 text-sm">{{ $day }}</td>
-                    @foreach($time_slots as $slot)
-                    <td class="border border-gray-100 p-2 align-top h-32 w-48 relative group">
-                        @if(isset($grid[$day][$slot]) && $grid[$day][$slot]->count() > 0)
-                            @foreach($grid[$day][$slot] as $session)
-                            <div class="bg-indigo-50 border-l-4 border-indigo-500 p-2 rounded mb-2 shadow-sm text-xs relative overflow-hidden group/session">
-                                <div class="font-bold text-indigo-900 truncate mb-1" title="{{ $session->subject }}">{{ $session->subject }}</div>
-                                <div class="text-[10px] text-indigo-600 font-bold mb-1">
-                                    {{ substr($session->start_time, 0, 5) }} - {{ substr($session->end_time, 0, 5) }}
-                                </div>
-                                <div class="text-gray-600 truncate">{{ $session->group->name ?? '—' }}</div>
-                                <div class="text-gray-500 italic truncate">{{ $session->trainer->first_name ?? '' }} {{ $session->trainer->last_name ?? '' }}</div>
-                                <div class="mt-1 text-indigo-600 font-semibold">{{ $session->space->name ?? '—' }}</div>
-                                
-                                {{-- Quick Actions Overlay --}}
-                                <div class="absolute inset-0 bg-white/95 opacity-0 group-hover/session:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                    <a href="{{ route('admin.schedules.edit', $session) }}" class="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition" title="Modifier">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </a>
-                                    <form action="{{ route('admin.schedules.destroy', $session) }}" method="POST" onsubmit="return confirm('Supprimer ce créneau ?')" class="inline">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="p-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition" title="Supprimer">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                            @endforeach
-                        @else
-                            <div class="h-full w-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <a href="{{ route('admin.schedules.create', ['day_of_week' => $day, 'start_time' => explode('-', $slot)[0]]) }}" class="text-indigo-400 hover:text-indigo-600">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                </a>
-                            </div>
-                        @endif
+                    @if($trackIndex === 0)
+                    <td rowspan="{{ count($tracks) }}" class="border border-gray-100 bg-indigo-50 p-3 font-bold text-indigo-900 text-sm align-middle">
+                        {{ $day }}
                     </td>
+                    @endif
+
+                    @foreach($time_slots as $slotIndex => $slot)
+                        @php $slotData = $track[$slotIndex]; @endphp
+                        
+                        @if($slotData === 'skip')
+                            @continue
+                        @elseif($slotData === null)
+                            <td class="border border-gray-100 p-2 align-top h-32 w-48 relative group">
+                                <div class="h-full w-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a href="{{ route('admin.schedules.create', ['day_of_week' => $day, 'start_time' => explode('-', $slot)[0]]) }}" class="text-indigo-400 hover:text-indigo-600">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    </a>
+                                </div>
+                            </td>
+                        @else
+                            @php 
+                                $session = $slotData['session']; 
+                                $colspan = $slotData['colspan']; 
+                            @endphp
+                            <td colspan="{{ $colspan }}" class="border border-gray-100 p-2 align-top h-32 relative group">
+                                <div class="bg-indigo-50 border-l-4 border-indigo-500 p-2 rounded mb-2 shadow-sm text-xs relative overflow-hidden group/session h-full">
+                                    <div class="font-bold text-indigo-900 truncate mb-1" title="{{ $session->subject }}">{{ $session->subject }}</div>
+                                    <div class="text-[10px] text-indigo-600 font-bold mb-1">
+                                        {{ substr($session->start_time, 0, 5) }} - {{ substr($session->end_time, 0, 5) }}
+                                    </div>
+                                    <div class="text-gray-600 truncate">{{ $session->group->name ?? '—' }}</div>
+                                    <div class="text-gray-500 italic truncate">{{ $session->trainer->first_name ?? '' }} {{ $session->trainer->last_name ?? '' }}</div>
+                                    <div class="mt-1 text-indigo-600 font-semibold">{{ $session->space->name ?? '—' }}</div>
+                                    
+                                    {{-- Quick Actions Overlay --}}
+                                    <div class="absolute inset-0 bg-white/95 opacity-0 group-hover/session:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                        <a href="{{ route('admin.schedules.edit', $session) }}" class="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition" title="Modifier">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        </a>
+                                        <form action="{{ route('admin.schedules.destroy', $session) }}" method="POST" onsubmit="return confirm('Supprimer ce créneau ?')" class="inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="p-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition" title="Supprimer">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </td>
+                        @endif
                     @endforeach
                 </tr>
+                @endforeach
                 @endforeach
             </tbody>
         </table>

@@ -45,19 +45,67 @@ class ScheduleController extends Controller
             '16:30-17:30', '17:30-18:30'
         ];
 
-        // Group schedules by day and time slot for the grid
+        // Group schedules by day and time slot into non-overlapping tracks
         $grid = [];
         foreach ($days as $day) {
-            foreach ($time_slots as $slot) {
-                list($start, $end) = explode('-', $slot);
-                $grid[$day][$slot] = $schedules->filter(function ($s) use ($day, $start, $end) {
-                    $sessionStart = substr($s->start_time, 0, 5);
-                    $sessionEnd = substr($s->end_time, 0, 5);
-                    return $s->day_of_week === $day && 
-                           $sessionStart < $end && 
-                           $sessionEnd > $start;
-                });
+            $daySchedules = $schedules->where('day_of_week', $day)->sortBy('start_time');
+            $tracks = [];
+            
+            foreach ($daySchedules as $session) {
+                $sessionStart = substr($session->start_time, 0, 5);
+                $sessionEnd = substr($session->end_time, 0, 5);
+                
+                $startIndex = -1;
+                $endIndex = -1;
+                
+                foreach ($time_slots as $index => $slot) {
+                    list($slotStart, $slotEnd) = explode('-', $slot);
+                    // If the session overlaps with this slot
+                    if ($sessionStart < $slotEnd && $sessionEnd > $slotStart) {
+                        if ($startIndex === -1) {
+                            $startIndex = $index;
+                        }
+                        $endIndex = $index;
+                    }
+                }
+                
+                if ($startIndex === -1) continue; // Out of bounds
+                
+                $colspan = $endIndex - $startIndex + 1;
+                
+                $trackIndex = 0;
+                while (true) {
+                    if (!isset($tracks[$trackIndex])) {
+                        $tracks[$trackIndex] = array_fill(0, count($time_slots), null);
+                    }
+                    
+                    $isFree = true;
+                    for ($i = $startIndex; $i <= $endIndex; $i++) {
+                        if ($tracks[$trackIndex][$i] !== null) {
+                            $isFree = false;
+                            break;
+                        }
+                    }
+                    
+                    if ($isFree) {
+                        $tracks[$trackIndex][$startIndex] = [
+                            'session' => $session,
+                            'colspan' => $colspan
+                        ];
+                        for ($i = $startIndex + 1; $i <= $endIndex; $i++) {
+                            $tracks[$trackIndex][$i] = 'skip';
+                        }
+                        break;
+                    }
+                    $trackIndex++;
+                }
             }
+            
+            if (empty($tracks)) {
+                $tracks[0] = array_fill(0, count($time_slots), null);
+            }
+            
+            $grid[$day] = $tracks;
         }
 
         $groups = Group::all();
